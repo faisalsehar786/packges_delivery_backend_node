@@ -1,9 +1,9 @@
 
-stotte-api
+
 Node.js, Express and MongodB
 
-Dev Link (Domain): https://api.stotte.com
-Dev Link (AWS Link): http://stotte.eu-north-1.elasticbeanstalk.com
+Dev Link (Domain):
+Dev Link (AWS Link): 
 
 ## What will you learn ?
 What will you learn by downloading my code?
