@@ -40,6 +40,8 @@ const loginAdmin = async (req, res, next) => {
     };
     const user = await AdminModel.findOne(params).exec();
 
+    console.log(user)
+
     if (!user) {
       return apiResponse.notFoundResponse(
         res,
