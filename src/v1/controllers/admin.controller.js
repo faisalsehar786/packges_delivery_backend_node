@@ -40,8 +40,6 @@ const loginAdmin = async (req, res, next) => {
     };
     const user = await AdminModel.findOne(params).exec();
 
-    console.log(user)
-
     if (!user) {
       return apiResponse.notFoundResponse(
         res,
@@ -242,6 +240,24 @@ const logoutAdmin = async (req, res, next) => {
 
 const createAdmin = async (req, res, next) => {
   try {
+
+    const {email, password} = req.body
+
+    function isValidEmail(value) {
+      const re =
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      return re.test(String(value).toLowerCase())
+    }
+
+    if (!email || !password || password.length < 6 || !isValidEmail(email)) {
+      return apiResponse.validationErrorWithData(
+        res,
+        'Beklager, det oppstod en valideringsfeil.',
+        'Validation Error',
+        'Invalid Data'
+      )
+    } 
+
     req.body.image = req?.file?.location || "";
     const { ...itemDetails } = req.body;
     const errors = validationResult(req);
@@ -900,6 +916,8 @@ const getUserTransactionsAppGoalBased = async (req, res, next) => {
       return acc;
     }, {});
     const finalRes = [];
+    let pending = 0;
+    let received = 0;
     Object.keys(groupedData).forEach((weekNumber) => {
       const weekData = groupedData[weekNumber];
       if (weekData.length > 0) {
@@ -926,18 +944,36 @@ const getUserTransactionsAppGoalBased = async (req, res, next) => {
           (acc, obj) => acc + obj.amount,
           0
         );
+        pending += updatedWeekData.reduce(
+          // eslint-disable-next-line no-unused-vars
+          (a, o) =>
+            // eslint-disable-next-line eqeqeq
+            (updatedWeekData.find((n) => n.status == "pending")?.amount || 0) +
+            a,
+          0
+        );
+        received += updatedWeekData.reduce(
+          // eslint-disable-next-line no-unused-vars
+          (a, o) =>
+            // eslint-disable-next-line eqeqeq
+            (updatedWeekData.find((n) => n.status == "charged")?.amount || 0) +
+            a,
+          0
+        );
         resp.total_transactions = sum_total_transactions;
         resp.total_amount = sum_total_amount;
         finalRes.push(resp);
       }
     });
     finalRes.sort((a, b) => b.week - a.week);
-    return apiResponse.successResponseWithPagination(
+    return apiResponse.successResponseWithPaginationAdditionalData(
       res,
       page,
       total,
       perPage,
-      finalRes
+      finalRes,
+      pending,
+      received
     );
   } catch (err) {
     next(err);

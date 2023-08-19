@@ -31,6 +31,30 @@ exports.successResponseWithPagination = (res, page, total, perPage, data) => {
   return res.status(200).json(resData);
 };
 
+exports.successResponseWithPaginationAdditionalData = (
+  res,
+  page,
+  total,
+  perPage,
+  data,
+  pending,
+  received
+) => {
+  const resData = {
+    pagination: {
+      page: +page,
+      pages: Math.ceil(total / perPage),
+      total: data.length,
+      totalRecords: total,
+      pageSize: perPage,
+    },
+    data,
+    pending,
+    received,
+  };
+  return res.status(200).json(resData);
+};
+
 exports.validationErrorWithData = (res, message, message_en, data = {}) => {
   const resData = {
     success: false,

@@ -14,27 +14,17 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+     
     },
-    mobile_number: {
-      type: String,
-      index: true,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    birth_date: {type: String},
+    mobile_number: {type: String, default: ''},
+    birth_date: {type: String, default: Date.now},
     image: {type: String, default: ''},
     status: {
       type: String,
       enum: ['active', 'blocked', 'pending_verification'],
       default: 'active',
     },
-    user_type: {
-      type: String,
-      default: 'customer',
-      enum: ['driver', 'customer'],  
-    },
+    user_type: {type: Array, default: [{role: 'customer'}, {role: 'driver'}]},
     session_id: {type: String, default: ''}, // session id that will help fetch accounts and transactions
     session_id_date: {type: Date}, // When the neonomic bank fetch session is created
     bank_id: {type: String, default: ''}, // the bank id we get from get all banks api

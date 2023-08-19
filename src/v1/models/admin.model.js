@@ -24,10 +24,10 @@ const adminSchema = new mongoose.Schema(
     mobile_number: {type: String, default: ''},
     communication: {type: String, enum: ['email', 'phone'], default: 'email'},
     image: {type: String, default: ''},
-    user_type: {type: String, enum: ['admin', 'driver', 'customer'], default: 'admin'},
+    user_type: {type: String, enum: ['admin'], default: 'admin'},
     ip_address: {type: String, default: ''},
     access_token: {type: String, default: ''},
-    refresh_token: {type: String, default: ''},
+    refresh_token: {type: String, default: ''},  
     status: {
       type: String,
       enum: ['active', 'blocked', 'pending_verification'],

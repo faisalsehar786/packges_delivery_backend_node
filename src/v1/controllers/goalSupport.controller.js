@@ -241,10 +241,11 @@ const createAgreement = async (req, res, next) => {
     await UserModel.findByIdAndUpdate(req.user.id, {
       agreement_id: agreementData.agreementId,
     });
-    return apiResponse.successResponse(
+    return apiResponse.successResponseWithData(
       res,
       "Vipps-avtale opprettet",
-      "Vipps Agreement Created"
+      "Vipps Agreement Created",
+      agreementData
     );
   } catch (err) {
     next(err);

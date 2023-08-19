@@ -18,7 +18,6 @@ const nifHelper = require("../../../helpers/nif.helper");
 const {
   getPagination,
   softDelete,
-  updateItem,
   totalItems,
   hashPassord,
   getItemWithPopulate,
