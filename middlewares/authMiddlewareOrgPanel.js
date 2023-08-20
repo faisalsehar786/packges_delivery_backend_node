@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const sslCertificate = require("get-ssl-certificate");
-const OrgUserModel = require("../src/v1/models/organisationUser.model");
+// const OrgUserModel = require("../src/v1/models/organisationUser.model");
 const apiResponse = require("../helpers/apiResponse");
 
 const checkOrgUserAuth = async (req, res, next) => {
@@ -50,28 +50,28 @@ const checkOrgUserAuth = async (req, res, next) => {
       // Verify Token
       const { id } = jwt.verify(token, process.env.JWT_SECRET_KEY);
       // Get User from Token
-      const data = await OrgUserModel.findOne({
-        _id: id,
-        access_token: token,
-      }).select("-password");
-      if (!data) {
-        return apiResponse.unauthorizedResponse(
-          res,
-          "Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ",
-          "Unauthorized User"
-        );
-      }
-      const ip_address =
-        req.header("x-forwarded-for") || req.socket.remoteAddress;
-      if (data.ip_address !== ip_address && data.access_token !== token) {
-        return apiResponse.unauthorizedResponse(
-          res,
-          "Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ",
-          "Unauthorized User"
-        );
-      }
-      req.user = data;
-      next();
+      // const data = await OrgUserModel.findOne({
+      //   _id: id,
+      //   access_token: token,
+      // }).select("-password");
+      // if (!data) {
+      //   return apiResponse.unauthorizedResponse(
+      //     res,
+      //     "Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ",
+      //     "Unauthorized User"
+      //   );
+      // }
+      // const ip_address =
+      //   req.header("x-forwarded-for") || req.socket.remoteAddress;
+      // if (data.ip_address !== ip_address && data.access_token !== token) {
+      //   return apiResponse.unauthorizedResponse(
+      //     res,
+      //     "Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ",
+      //     "Unauthorized User"
+      //   );
+      // }
+      // req.user = data;
+      // next();
     } catch (error) {
       return apiResponse.unauthorizedResponse(
         res,

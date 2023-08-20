@@ -3,21 +3,23 @@ const mongooseDelete = require('mongoose-delete')
 
 const notificationSchema = new mongoose.Schema(
   {
-    user_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Admin'},
-    sender_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Admin'},
-    receiver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Admin'},
-    organisation_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Organisation",
-    },
-    item_id: {type: String, default: ''},
-    title: {type: String, default: ''},
+    admin_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Admin'},
+    sender_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    receiver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     type: {
       type: String,
       default: 'other',
-      enum: ['goal_support', 'consent', 'other'],
+      enum: ['tender', 'order', 'payment', 'other'],
     },
-    body: {type: String, default: ''},
+    body: {
+      title: {
+        type: String,
+        default: '',
+      },
+      object: {
+        type: Object,
+      },
+    },
     read: {type: Boolean, default: false},
   },
   {

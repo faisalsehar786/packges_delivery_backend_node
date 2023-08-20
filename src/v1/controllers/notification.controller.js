@@ -3,7 +3,7 @@ const { validationResult } = require("express-validator");
 const { ObjectId } = require("mongodb");
 const notification = require("../models/notification.model");
 const apiResponse = require("../../../helpers/apiResponse");
-const goalSupport = require("../models/goalSupport.model");
+// const goalSupport = require("../models/goalSupport.model"); 
 const {
   softDelete,
   totalItems,
@@ -331,7 +331,7 @@ const getnotificationReceiver = async (req, res, next) => {
       const retData = rcdata?.data?.map(async (collectData) => {
         if (collectData?.type === "goal_support") {
           const prms7 = { _id: collectData?.item_id };
-          const data2 = await goalSupport.findOne(prms7).populate("meeting_id");
+          // const data2 = await goalSupport.findOne(prms7).populate("meeting_id");
           if (data2) {
             collectData.item_id = JSON.stringify(data2);
             counter++;

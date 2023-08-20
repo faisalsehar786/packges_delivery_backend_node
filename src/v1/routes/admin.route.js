@@ -9,12 +9,10 @@ const {
   checkAdminUserAuth,
 } = require("../../../middlewares/authMiddlewareAdminPanel");
 
-const {
-  checkAuthOrigins,
-} = require("../../../middlewares/authMiddlewareGenericAll");
+require("../../../middlewares/authMiddlewareGenericAll");
 const { checkAuthGuard } = require("../../../middlewares/authGuard");
 const Roles = require("../../../utils/roles");
-
+  
 const router = express.Router();
 
 router.post(
@@ -81,12 +79,7 @@ router.get(
   checkAuthGuard(Roles.Admin),
   adminController.loggedUser
 );
-router.get(
-  "/stats",
-  checkAuthOrigins,
-  checkAuthGuard([Roles.Admin, Roles.Manager, Roles.User]),
-  adminController.getStats
-);
+
 router.get(
   "/",
   checkAuthGuard(Roles.Admin, Roles.Manager),
@@ -99,10 +92,5 @@ router.get(
   checkAdminUserAuth,
   adminController.getAdminById
 );
-router.get(
-  "/transactions_admin_by_goal/:id/:year",
-  checkAdminUserAuth,
-  checkAuthGuard([Roles.Admin, Roles.Manager]),
-  adminController.getUserTransactionsAppGoalBased
-);
+
 module.exports = router;

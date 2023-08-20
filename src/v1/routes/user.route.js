@@ -16,36 +16,14 @@ const {
 router.get('/get_all', checkAdminUserAuth, userController.getUsers)
 router.post('/vipps_login_auth_uri', userController.loginVippsAuthUri)
 router.post('/vipps_login', userController.loginVippsUserInfo)
-router.get(
-  '/detail_profile_app',
-  checkAuthOrigins,
-  checkAuthGuard([Roles.User]),
-  userController.getDetailProfileApp
-)
+
 router.get(
   '/detail_profile/:id',
   checkAuthOrigins,
   checkAuthGuard([Roles.Admin, Roles.Manager]),
   userController.getDetailProfile
 )
-router.get(
-  '/transactions/:id',
-  checkAdminUserAuth,
-  checkAuthGuard([Roles.Admin, Roles.Manager]),
-  userController.getUserTransactions
-)
-router.get(
-  '/transactions_app/:id/:year',
-  checkUserAuth,
-  checkAuthGuard([Roles.User]),
-  userController.getUserTransactionsApp
-)
-router.get(
-  '/transactions_app_goal_support/:id/:year',
-  checkUserAuth,
-  checkAuthGuard([Roles.User]),
-  userController.getUserTransactionsAppGoalSupport
-)
+
 router.post('/login_test', userController.loginUser)
 //////////////////////////////////////////////////////////////
 
@@ -76,7 +54,7 @@ router.post(
   userController.changeUserFrontEndUserPassword
 )
 //////////////////////////////////////////////////////////////////////
-
+ 
 router.get('/refresh_token', userController.refreshTokenUser)
 router.get('/logout', checkUserAuth, checkAuthGuard([Roles.User]), userController.logout)
 router.get(

@@ -138,75 +138,7 @@ app.use((err, req, res, next) => {
   );
 });
 
-// // create a cron job to fetch transactions and save no of transactions and amount to db
-// const job1 = new CronJob(
-//   "00 00 01 * * *", // cron job that runs everyday at 01am
-//   // "* * * * *", // runs every second
-//   async () => {
-//     console.log("Fetch Transactions cron job start: ", new Date().toString());
-//     await cronJobFile.fetchTransactions();
-//   },
-//   null,
-//   true,
-//   "Europe/Oslo"
-// );
 
-// const job2 = new CronJob(
-//   "0 04 * * 1", // cron job that runs every monday at 4am
-//   // "* * * * *", // runs every second
-//   async () => {
-//     console.log(
-//       "Charge Pending Payments cron job start: ",
-//       new Date().toString()
-//     );
-//     await cronJobFile.chargePendingPayments();
-//   },
-//   null,
-//   true,
-//   "Europe/Oslo"
-// );
-
-// const job3 = new CronJob(
-//   "0 21 * * *", // cron job that runs everyday at 9pm
-//   // "* * * * *", // runs every second
-//   async () => {
-//     console.log("Charge Status Update: ", new Date().toString());
-//     await cronJobFile.checkChargedPayments();
-//   },
-//   null,
-//   true,
-//   "Europe/Oslo"
-// );
-
-// const job4 = new CronJob(
-//   "0 19 1 * *", // cron job that runs 1st of every month at 7pm
-//   // "* * * * *", // runs every second
-//   async () => {
-//     console.log("Triple Tax Charge: ", new Date().toString());
-//     await cronJobFile.tripleTaxOrdersInvoiceCharge();
-//   },
-//   null,
-//   true,
-//   "Europe/Oslo"
-// );
-
-// const job5 = new CronJob(
-//   "0 18 * * *", // cron job that runs everyday at 6pm
-//   // "* * * * *", // runs every second
-//   async () => {
-//     console.log("Push Notifications: ", new Date().toString());
-//     await cronJobFile.sendConsentExpirySignals();
-//   },
-//   null,
-//   true,
-//   "Europe/Oslo"
-// );
-
-// job1.start();
-// job2.start();
-// job3.start();
-// job4.start();
-// job5.start();
 
 const port = process.env.PORT;
 app.listen(port, () => {

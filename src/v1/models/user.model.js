@@ -14,7 +14,6 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-     
     },
     mobile_number: {type: String, default: ''},
     birth_date: {type: String, default: Date.now},
@@ -25,29 +24,6 @@ const userSchema = new mongoose.Schema(
       default: 'active',
     },
     user_type: {type: Array, default: [{role: 'customer'}, {role: 'driver'}]},
-    session_id: {type: String, default: ''}, // session id that will help fetch accounts and transactions
-    session_id_date: {type: Date}, // When the neonomic bank fetch session is created
-    bank_id: {type: String, default: ''}, // the bank id we get from get all banks api
-    bank_name: {type: String, default: ''},
-    account_id: {type: String, default: ''}, // the account id we have get consent to charge
-    agreement_id: {type: String}, // vipps agreement id
-    bank_account: {type: String, default: ''},
-    bank_connection_list: [
-      {
-        id: {type: String},
-        iban: {type: String},
-        bban: {type: String},
-        accountName: {type: String},
-        accountType: {type: String},
-        ownerName: {type: String},
-        displayName: {type: String},
-        status: {
-          type: String,
-          enum: ['active', 'expired', 'pause'],
-          default: 'active',
-        },
-      },
-    ], // the detail account list payload for which we have consent to charge
     push_token: {type: String},
     ip_address: {type: String, default: ''},
     access_token: {type: String, default: ''},

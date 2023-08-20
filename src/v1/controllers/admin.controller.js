@@ -8,10 +8,6 @@ const {
   verifyToken,
 } = require("../../../middlewares/authMiddleware");
 const AdminModel = require("../models/admin.model");
-const GoalModel = require("../models/goal.model");
-const GoalSupportModel = require("../models/goalSupport.model");
-const organisationModel = require("../models/organisation.model");
-const PaymentTransferModel = require("../models/paymentTransfer.model");
 const AdminUserPasswordResetModel = require("../models/adminPasswordReset.model");
 const AdminLoginOtpModel = require("../models/adminLoginOtp.model");
 const {
@@ -21,10 +17,7 @@ const {
   getItemWithPopulate,
 } = require("../../../helpers/commonApis");
 const { sendEmail } = require("../../../helpers/emailSender");
-const pendingPaymentModel = require("../models/pendingPayment.model");
 const { generateOTP } = require("../../../helpers/otpVerification");
-const PendingPaymentModel = require("../models/pendingPayment.model");
-const randomNumber = require("../../../utils/randomNumber");
 
 const loginAdmin = async (req, res, next) => {
   try {
@@ -804,181 +797,7 @@ const changeUserPassword = async (req, res, next) => {
   }
 };
 
-const getStats = async (req, res, next) => {
-  try {
-    Promise.all([
-      PaymentTransferModel.aggregate([
-        { $group: { _id: null, sum_val: { $sum: "$amount" } } },
-      ]),
-      organisationModel.count(),
-      organisationModel.count({ account_created: true }),
-      GoalModel.count(),
-      GoalModel.count({ status: "active" }),
-      GoalSupportModel.distinct("user_id"),
-      GoalSupportModel.distinct("user_id", { status: "active" }),
-      GoalSupportModel.count({ status: "active" }),
-      pendingPaymentModel.aggregate([
-        { $match: { status: "pending" } },
-        { $group: { _id: null, total_amount: { $sum: "$amount" } } },
-      ]),
-      PaymentTransferModel.aggregate([
-        { $match: { status: "charged" } },
-        { $group: { _id: null, total_amount: { $sum: "$amount" } } },
-      ]),
-    ])
-      .then(
-        ([
-          totalReceivedSupports,
-          totalOrganisations,
-          totalActiveOrganisations,
-          totalGoals,
-          activeGoals,
-          totalSupporters,
-          totalActiveSupporters,
-          totalActiveSupports,
-          pendingAmount,
-          chargedAmount,
-        ]) => {
-          const responseData = {
-            total_organisations: totalOrganisations,
-            total_active_organisations: totalActiveOrganisations,
-            total_goals: totalGoals,
-            active_goals: activeGoals,
-            total_supporters: totalSupporters.length,
-            total_active_supporters: totalActiveSupporters.length,
-            total_active_supports: totalActiveSupports,
-            total_received_supports:
-              (totalReceivedSupports[0]?.sum_val || 0).toFixed(0) || 0,
-            total_stotte_cut:
-              (0.12 * (totalReceivedSupports[0]?.sum_val || 0)).toFixed(0) || 0,
-            total_support_paid_org:
-              (0.88 * (totalReceivedSupports[0]?.sum_val || 0)).toFixed(0) || 0,
-            total_pending_amount: pendingAmount[0]?.total_amount || 0,
-            total_charged_amount: chargedAmount[0]?.total_amount || 0,
-          };
-          return apiResponse.successResponseWithData(
-            res,
-            "statistikkData innhenting vellykket.",
-            "Stats data fetched successfully",
-            responseData
-          );
-        }
-      )
-      .catch((err) => {
-        console.log("Error: ", err);
-      });
-  } catch (err) {
-    next(err);
-  }
-};
 
-const getUserTransactionsAppGoalBased = async (req, res, next) => {
-  try {
-    const goal_id = req.params.id;
-    const yearParams = req.params.year;
-    if (!mongoose.Types.ObjectId.isValid(goal_id)) {
-      return apiResponse.validationErrorWithData(
-        res,
-        "Beklager, det oppstod en valideringsfeil.",
-        "Validation Error",
-        "Invalid Data"
-      );
-    }
-    const goal = await GoalModel.findOne({
-      _id: goal_id,
-    }).exec();
-    if (!goal) {
-      return apiResponse.notFoundResponse(
-        res,
-        "Beklager, vi finner ikke dataen du ser etter.",
-        "Not found!"
-      );
-    }
-    const page = req.query.page > 0 ? req.query.page : 1;
-    const perPage = req.query.limit ? parseInt(req.query.limit, 10) : 10;
-    const countParams = { goal_id };
-    const total = await PendingPaymentModel.count(countParams).exec();
-    const data = await PendingPaymentModel.find({
-      goal_id,
-      created_at: {
-        $gte: new Date(`${yearParams}-01-01`),
-        $lt: new Date(`${yearParams + 1}-01-01`),
-      },
-    })
-      .populate({ path: "goal_id", select: "title" })
-      .exec();
-    const groupedData = data.reduce((acc, item) => {
-      const weekNumber = randomNumber.getWeekNumber(new Date(item.created_at));
-      if (!acc[weekNumber]) {
-        acc[weekNumber] = [];
-      }
-      acc[weekNumber].push(item);
-      return acc;
-    }, {});
-    const finalRes = [];
-    let pending = 0;
-    let received = 0;
-    Object.keys(groupedData).forEach((weekNumber) => {
-      const weekData = groupedData[weekNumber];
-      if (weekData.length > 0) {
-        const updatedWeekData = weekData.map((item) => {
-          // eslint-disable-next-line no-param-reassign
-          item._doc.goal_title = item.goal_id.title || "";
-          // eslint-disable-next-line no-param-reassign
-          item._doc.goal_id = undefined;
-          return item;
-        });
-        // eslint-disable-next-line prefer-const
-        let resp = {
-          week: parseInt(weekNumber, 10),
-          total_transactions: 0,
-          total_amount: 0,
-          goal_title: updatedWeekData[0]?._doc?.goal_title,
-          transactions_list: updatedWeekData,
-        };
-        const sum_total_transactions = updatedWeekData.reduce(
-          (acc, obj) => acc + obj.no_of_transactions,
-          0
-        );
-        const sum_total_amount = updatedWeekData.reduce(
-          (acc, obj) => acc + obj.amount,
-          0
-        );
-        pending += updatedWeekData.reduce(
-          // eslint-disable-next-line no-unused-vars
-          (a, o) =>
-            // eslint-disable-next-line eqeqeq
-            (updatedWeekData.find((n) => n.status == "pending")?.amount || 0) +
-            a,
-          0
-        );
-        received += updatedWeekData.reduce(
-          // eslint-disable-next-line no-unused-vars
-          (a, o) =>
-            // eslint-disable-next-line eqeqeq
-            (updatedWeekData.find((n) => n.status == "charged")?.amount || 0) +
-            a,
-          0
-        );
-        resp.total_transactions = sum_total_transactions;
-        resp.total_amount = sum_total_amount;
-        finalRes.push(resp);
-      }
-    });
-    finalRes.sort((a, b) => b.week - a.week);
-    return apiResponse.successResponseWithPaginationAdditionalData(
-      res,
-      page,
-      total,
-      perPage,
-      finalRes,
-      pending,
-      received
-    );
-  } catch (err) {
-    next(err);
-  }
-};
 
 module.exports = {
   loginAdmin,
@@ -998,6 +817,5 @@ module.exports = {
   refreshingToken,
   loggedUser,
   changeUserPassword,
-  getStats,
-  getUserTransactionsAppGoalBased,
+ 
 };
