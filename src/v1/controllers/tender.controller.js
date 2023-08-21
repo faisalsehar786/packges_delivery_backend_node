@@ -1,14 +1,20 @@
 const TenderModel = require('../models/tender.model')
 const {
+  slugify
+} = require('../../../utils/customfunctions')
+const {
   getPagination,
   getItem,
-  softDelete, 
+  softDelete,
   updateItem,
   createItem,
   totalItemsCustomQuery,
 } = require('../../../helpers/commonApis')
-
+  
 const createTender = async (req, res, next) => {
+  req.body.slug = slugify(req.body.title)
+  req.body.receiver_id = req.user.id
+
   try {
     await createItem({
       req,
@@ -74,6 +80,7 @@ const deleteTenderOrderPayments = async (req, res, next) => {
 
 const updateTender = async (req, res, next) => {
   try {
+    req.body.slug = slugify(req.body.title)
     await updateItem({
       req,
       res,

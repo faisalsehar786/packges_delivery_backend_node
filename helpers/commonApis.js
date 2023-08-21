@@ -2,8 +2,8 @@ const mongoose = require('mongoose')
 const {validationResult} = require('express-validator')
 const bcrypt = require('bcrypt')
 const moment = require('moment')
-const apiResponse = require('./apiResponse')  
-
+const apiResponse = require('./apiResponse')
+  
 exports.getPagination = async ({req, res, model, findOptions}) => {
   const order = req.query.order ? req.query.order : 'desc'
   const sortBy = req.query.sortBy ? req.query.sortBy : '_id'
@@ -134,6 +134,19 @@ exports.getItem = async ({id, Model, res, populate = undefined}) => {
   }
 }
 
+exports.getItemWithPopulate = async ({query, Model, populateObject, res}) => {
+  try {
+    const item = await Model.findOne(query).populate(populateObject)
+    if (!item) {
+      return apiResponse.ErrorResponse(res, 'Not found!')
+    }
+
+    return apiResponse.successResponseWithData(res, 'Operation success', item)
+  } catch (err) {
+    return apiResponse.ErrorResponse(res, err.message)
+  }
+}  
+
 exports.softDelete = async ({req, res, Model, itemName}) => {
   try {
     Model.findById(req.params.id, (_, item) => {
@@ -155,7 +168,7 @@ exports.softDelete = async ({req, res, Model, itemName}) => {
         return apiResponse.successResponseWithData(
           res,
           'Sletting utført.',
-          'Deleted Successfully',
+          `${itemName} Deleted Successfully`,
           data
         )
       })
@@ -167,6 +180,46 @@ exports.softDelete = async ({req, res, Model, itemName}) => {
       'System went wrong, Kindly try again later'
     )
   }
+}
+
+exports.softDeleteWithConditionMany = async ({req, res, Model,cond, itemName}) => {
+
+  try {
+    const data = await Model.deleteMany()(cond)
+    return apiResponse.successResponseWithData(
+      res,
+      'Sletting utført.',
+      `${itemName} Deleted Successfully`,
+      data
+    )
+  } catch (err) {
+    return apiResponse.ErrorResponse(
+      res,
+      'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
+      'System went wrong, Kindly try again later'
+    )
+  }
+ 
+} 
+
+exports.softDeleteWithCondition = async ({req, res, Model,cond, itemName}) => {
+
+  try {
+    const data = await Model.deleteOne(cond)
+    return apiResponse.successResponseWithData(
+      res,
+      'Sletting utført.',
+      `${itemName} Deleted Successfully`,
+      data
+    )
+  } catch (err) {
+    return apiResponse.ErrorResponse(
+      res,
+      'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
+      'System went wrong, Kindly try again later'
+    )
+  }
+ 
 }
 
 exports.hardDelete = async ({req, res, Model, itemName}) => {
@@ -187,7 +240,7 @@ exports.hardDelete = async ({req, res, Model, itemName}) => {
             'System went wrong, Kindly try again later'
           )
         }
-        return apiResponse.successResponse(res, 'oppdatert', 'Deleted successfully')
+        return apiResponse.successResponse(res, 'oppdatert', `${itemName} Deleted Successfully`)
       })
     })
   } catch (err) {
@@ -232,7 +285,7 @@ exports.createItem = async ({req, res, Model, itemName}) => {
       return apiResponse.successResponseWithData(
         res,
         'Oppretting vellykket.',
-        'Created successfully',
+        `${itemName} Created Successfully`,
         createdItem
       )
     })
@@ -243,6 +296,48 @@ exports.createItem = async ({req, res, Model, itemName}) => {
       'System went wrong, Kindly try again later'
     )
   }
+}
+
+exports.createItemReturnData = async ({req, res, Model, itemName}) => {
+  const {...itemDetails} = req.body
+  const errors = validationResult(req)
+
+  if (!errors.isEmpty()) {
+    return apiResponse.validationErrorWithData(
+      res,
+      'Beklager, det oppstod en valideringsfeil.',
+      'Validation Error',
+      'Invalid Data'
+    )
+  }
+  const createdItem = new Model(itemDetails)
+
+  return createdItem.save()
+}
+
+exports.updateItemReturnData = async ({Model, cond, req, res}) => {
+  const {...itemDetails} = req.body
+
+  const errors = validationResult(req)
+
+  if (!errors.isEmpty()) {
+    return apiResponse.validationErrorWithData(
+      res,
+      'Beklager, det oppstod en valideringsfeil.',
+      'Validation Error',
+      'Invalid Data'
+    )
+  }
+
+  const updateRecord = await Model.findOneAndUpdate(
+    cond,
+    {
+      $set: itemDetails,
+    },
+    {new: true}
+  )
+
+  return updateRecord
 }
 
 exports.updateItem = async ({req, res, Model, itemName}) => {
@@ -302,7 +397,7 @@ exports.updateItem = async ({req, res, Model, itemName}) => {
       return apiResponse.successResponseWithData(
         res,
         'oppdatert',
-        'updated successfully',
+        `${itemName} updated Successfully`,
         updateRecord
       )
     })
@@ -315,32 +410,6 @@ exports.updateItem = async ({req, res, Model, itemName}) => {
   }
 }
 
-exports.totalItems = async ({req, res, Model, itemName}) => {
-  try {
-    const totalItems = await Model.count({
-      $and: [
-        {
-          loged_in_user_id: req.user._id,
-        },
-      ],
-    }).exec()
-
-    return apiResponse.successResponseWithData(
-      res,
-      `Søk etter antall ${itemName} ble vellykket`,
-      `Total no of ${itemName} successfully found`,
-      {
-        totalItems,
-      }
-    )
-  } catch (err) {
-    return apiResponse.ErrorResponse(
-      res,
-      'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
-      'System went wrong, Kindly try again later'
-    )
-  }
-}
 
 exports.getItemWithPopulate = async ({query, Model, populateObject, res}) => {
   try {
@@ -437,7 +506,7 @@ exports.getFilterOptionsmeTimeline = (req) => {
   return undefined
 }
 
-exports.getFilterOptionsTransactionsyearly = (req) => {
+exports.getFilterOptionsyearly = (req) => {
   const {filter} = req.query
   if (filter) {
     const startDate = moment([filter]).format('yyyy-MM-DD')

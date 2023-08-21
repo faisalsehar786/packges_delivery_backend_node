@@ -1,98 +1,85 @@
-const TenderModel = require('../models/tender.model')
+const chatModel = require('../models/chat.model')  
 const {
   getPagination,
-  getItem,
+  getItem,  
   softDelete,
   updateItem,
   createItem,
-  totalItemsCustomQuery,
-} = require('../../../helpers/commonApis')
-
-const createTender = async (req, res, next) => {
-  try {
+  totalItemsCustomQuery,    
+} = require('../../../helpers/commonApis')   
+  
+const createChat = async (req, res, next) => {
+  try { 
     await createItem({
       req,
       res,
-      Model: TenderModel,
-      itemName: 'Tender',
+      Model: chatModel,
+      itemName: 'Chat',
     })
   } catch (err) {
     next(err)
   }
 }
 
-const getTender = async (req, res, next) => {
+const getChat = async (req, res, next) => {
   try {
     const itemId = req.params.id
-    return await getItem({id: itemId, Model: TenderModel, res})
+    return await getItem({id: itemId, Model: chatModel, res})
   } catch (err) {
     next(err)
   }
 }
 
-const getTenders = async (req, res, next) => {
+const getChats = async (req, res, next) => {
   try {
     const term = req.query.search
     return await getPagination({
       req,
       res,
-      model: TenderModel,
+      model: chatModel,
       findOptions: {
-        $or: [{title: {$regex: term, $options: 'i'}}],
+        $or: [{Chat_no: {$regex: term, $options: 'i'}}],
       },
     })
   } catch (err) {
     next(err)
   }
 }
-
-const deleteTender = async (req, res, next) => {
+        
+const deleteChat = async (req, res, next) => {
   try {
     await softDelete({
       req,
       res,
-      Model: TenderModel,
-      itemName: 'Tender',
+      Model: chatModel,
+      itemName: 'Chat',
     })
   } catch (err) {
     next(err)
   }
 }
 
-const deleteTenderOrderPayments = async (req, res, next) => {
-  try {
-    await softDelete({
-      req,
-      res,
-      Model: TenderModel,
-      itemName: 'Tender',
-    })
-  } catch (err) {
-    next(err)
-  }
-}
-
-const updateTender = async (req, res, next) => {
+const updateChat = async (req, res, next) => {
   try {
     await updateItem({
       req,
       res,
-      Model: TenderModel,
-      itemName: 'Tender',
+      Model: chatModel,
+      itemName: 'Chat',
     })
   } catch (err) {
     next(err)
   }
 }
 
-const totalTenders = async (req, res, next) => {
+const totalChats = async (req, res, next) => {
   try {
     await totalItemsCustomQuery({
       req,
       res,
-      Model: TenderModel,
+      Model: chatModel,
       query: {},
-      itemName: 'Tender',
+      itemName: 'Chat',
     })
   } catch (err) {
     next(err)
@@ -100,11 +87,10 @@ const totalTenders = async (req, res, next) => {
 }
 
 module.exports = {
-  createTender,
-  getTender,
-  getTenders,
-  deleteTender,
-  updateTender,
-  totalTenders,
-  deleteTenderOrderPayments,
+  createChat,
+  getChat,
+  getChats,
+  deleteChat,
+  updateChat,
+  totalChats,
 }

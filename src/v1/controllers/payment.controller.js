@@ -1,98 +1,85 @@
-const TenderModel = require('../models/tender.model')
+const paymentModel = require('../models/payment.model')  
 const {
   getPagination,
   getItem,
   softDelete,
   updateItem,
   createItem,
-  totalItemsCustomQuery,
-} = require('../../../helpers/commonApis')
-
-const createTender = async (req, res, next) => {
-  try {
+  totalItemsCustomQuery,  
+} = require('../../../helpers/commonApis')   
+  
+const createPayment = async (req, res, next) => {
+  try { 
     await createItem({
       req,
       res,
-      Model: TenderModel,
-      itemName: 'Tender',
+      Model: paymentModel,
+      itemName: 'Payment',
     })
   } catch (err) {
     next(err)
   }
 }
 
-const getTender = async (req, res, next) => {
+const getPayment = async (req, res, next) => {
   try {
     const itemId = req.params.id
-    return await getItem({id: itemId, Model: TenderModel, res})
+    return await getItem({id: itemId, Model: paymentModel, res})
   } catch (err) {
     next(err)
   }
 }
 
-const getTenders = async (req, res, next) => {
+const getPayments = async (req, res, next) => {
   try {
     const term = req.query.search
     return await getPagination({
       req,
       res,
-      model: TenderModel,
+      model: paymentModel,
       findOptions: {
-        $or: [{title: {$regex: term, $options: 'i'}}],
+        $or: [{Payment_no: {$regex: term, $options: 'i'}}],
       },
     })
   } catch (err) {
     next(err)
   }
 }
-
-const deleteTender = async (req, res, next) => {
+        
+const deletePayment = async (req, res, next) => {
   try {
     await softDelete({
       req,
       res,
-      Model: TenderModel,
-      itemName: 'Tender',
+      Model: paymentModel,
+      itemName: 'Payment',
     })
   } catch (err) {
     next(err)
   }
 }
 
-const deleteTenderOrderPayments = async (req, res, next) => {
-  try {
-    await softDelete({
-      req,
-      res,
-      Model: TenderModel,
-      itemName: 'Tender',
-    })
-  } catch (err) {
-    next(err)
-  }
-}
-
-const updateTender = async (req, res, next) => {
+const updatePayment = async (req, res, next) => {
   try {
     await updateItem({
       req,
       res,
-      Model: TenderModel,
-      itemName: 'Tender',
+      Model: paymentModel,
+      itemName: 'Payment',
     })
   } catch (err) {
     next(err)
   }
 }
 
-const totalTenders = async (req, res, next) => {
+const totalPayments = async (req, res, next) => {
   try {
     await totalItemsCustomQuery({
       req,
       res,
-      Model: TenderModel,
+      Model: paymentModel,
       query: {},
-      itemName: 'Tender',
+      itemName: 'Payment',
     })
   } catch (err) {
     next(err)
@@ -100,11 +87,10 @@ const totalTenders = async (req, res, next) => {
 }
 
 module.exports = {
-  createTender,
-  getTender,
-  getTenders,
-  deleteTender,
-  updateTender,
-  totalTenders,
-  deleteTenderOrderPayments,
+  createPayment,
+  getPayment,
+  getPayments,
+  deletePayment,
+  updatePayment,
+  totalPayments,
 }

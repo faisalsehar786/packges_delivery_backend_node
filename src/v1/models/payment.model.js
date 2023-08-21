@@ -1,13 +1,13 @@
 const mongoose = require('mongoose')
 const mongooseDelete = require('mongoose-delete')
 
-const orderSchema = new mongoose.Schema(
+const paymentSchema = new mongoose.Schema(
   {
     receiver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     picker_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     tender_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Tender'},
     order_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Order'},
-    total_price: {type: Number, default: 0},
+    paid_price: {type: Number, default: 0},
     fee: {type: Number, default: 0},
     tax: {type: Number, default: 0},
     receiver_share: {type: Number, default: 0},
@@ -15,7 +15,7 @@ const orderSchema = new mongoose.Schema(
     charge_date: {type: Date, default: Date.now},
     status: {
       type: String,
-      enum: ['published', 'processing', 'completed', 'cancelled', 'refunded'],
+      enum: ['published', 'processing', 'completed'],
       default: 'published',
     },
   },
@@ -26,6 +26,6 @@ const orderSchema = new mongoose.Schema(
     },
   }
 )
-orderSchema.plugin(mongooseDelete, {overrideMethods: 'all'})
+paymentSchema.plugin(mongooseDelete, {overrideMethods: 'all'})
 
-module.exports = mongoose.model('Order', orderSchema)
+module.exports = mongoose.model('Payment', paymentSchema)

@@ -3,8 +3,8 @@ const mongooseDelete = require('mongoose-delete')
 
 const tenderSchema = new mongoose.Schema(
   {
-    receiver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    picker_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    receiver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User',default: null},
+    picker_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
     title: {type: String, default: ''},
     slug: {type: String, default: ''},
     files: [
@@ -17,6 +17,7 @@ const tenderSchema = new mongoose.Schema(
     delivery_date: {type: Date, default: Date.now},
     tender_variations: [
       {
+        text: {type: String, default: ''},
         weight: {type: Number, default: 0},
         width: {type: Number, default: 0},
         height: {type: Number, default: 0},
@@ -46,7 +47,7 @@ const tenderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['published', 'rejected', 'accepted'],
+      enum: ['published', 'accepted'],
       default: 'published',
     },
   },
