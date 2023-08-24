@@ -1,21 +1,22 @@
-const chatModel = require('../models/chat.model')  
+const chatModel = require('../models/chat.model')
 const {
-  getPagination,
-  getItem,  
-  softDelete,
+  getItem,
   updateItem,
   createItem,
-  totalItemsCustomQuery,    
-} = require('../../../helpers/commonApis')   
-  
+  getPaginationWithPopulate,
+} = require('../../../helpers/commonApis')
+const apiResponse = require('../../../helpers/apiResponse')
+
 const createChat = async (req, res, next) => {
-  try { 
-    await createItem({
-      req,
-      res,
-      Model: chatModel,
-      itemName: 'Chat',
-    })
+  try {
+    const {messageType} = req.body
+    ;(req.body.imageUrl = messageType === 'image' ? req?.file?.location : null),
+      await createItem({
+        req,
+        res,
+        Model: chatModel,
+        itemName: 'Chat',
+      })
   } catch (err) {
     next(err)
   }
@@ -32,53 +33,80 @@ const getChat = async (req, res, next) => {
 
 const getChats = async (req, res, next) => {
   try {
+    const {senderId, recepientId, tender_id} = req.params
     const term = req.query.search
-    return await getPagination({
+    return await getPaginationWithPopulate({
       req,
       res,
       model: chatModel,
       findOptions: {
-        $or: [{Chat_no: {$regex: term, $options: 'i'}}],
+        $and: [{tender_id: tender_id}],
+        $or: [
+          {senderId: senderId, recepientId: recepientId},
+          {senderId: recepientId, recepientId: senderId},
+        ],
       },
+      populateObject: [
+        {
+          path: 'senderId',
+          select: {
+            _id: 1,
+            first_name: 1,
+            last_name: 1,
+            image: 1,
+          },
+        },
+        {
+          path: 'recepientId',
+          select: {
+            _id: 1,
+            first_name: 1,
+            last_name: 1,
+            image: 1,
+          },
+        },
+      ],
     })
   } catch (err) {
     next(err)
   }
 }
-        
+
 const deleteChat = async (req, res, next) => {
   try {
-    await softDelete({
-      req,
-      res,
-      Model: chatModel,
-      itemName: 'Chat',
+    const {messages} = req.body
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return apiResponse.validationErrorWithData(
+        res,
+        'Beklager, det oppstod en valideringsfeil.',
+        'Validation Error',
+        'Invalid Data'
+      )
+    }
+    await chatModel.deleteMany({_id: {$in: messages}})
+    return apiResponse.successResponseWithData(res, 'Deleted', `Message deleted successfully`, {
+      deleted: true,
     })
-  } catch (err) {
-    next(err)
+  } catch (error) {
+    return apiResponse.ErrorResponse(
+      res,
+      'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
+      'System went wrong, Kindly try again later'
+    )
   }
 }
 
 const updateChat = async (req, res, next) => {
   try {
+    if (req?.file?.location) {
+      req.body.imageUrl = req.body.messageType == 'image' ? req?.file?.location : null
+    }
+
     await updateItem({
       req,
       res,
       Model: chatModel,
-      itemName: 'Chat',
-    })
-  } catch (err) {
-    next(err)
-  }
-}
-
-const totalChats = async (req, res, next) => {
-  try {
-    await totalItemsCustomQuery({
-      req,
-      res,
-      Model: chatModel,
-      query: {},
       itemName: 'Chat',
     })
   } catch (err) {
@@ -92,5 +120,4 @@ module.exports = {
   getChats,
   deleteChat,
   updateChat,
-  totalChats,
 }

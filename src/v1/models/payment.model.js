@@ -3,20 +3,41 @@ const mongooseDelete = require('mongoose-delete')
 
 const paymentSchema = new mongoose.Schema(
   {
-    receiver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    picker_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    tender_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Tender'},
-    order_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Order'},
-    paid_price: {type: Number, default: 0},
+    receiver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
+    picker_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
+    tender_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Tender', default: null},
+    order_no: { type: String, required: true },
+    payment_method: { type: String},
+    paid_price: {type: Number, default: 0}, 
     fee: {type: Number, default: 0},
     tax: {type: Number, default: 0},
-    receiver_share: {type: Number, default: 0},
-    picker_share: {type: Number, default: 0},
+    receiver_share_amount: {type: Number, default: 0},
+    picker_share_amount: {type: Number, default: 0},
+    platfrom_share_: {
+      platfrom_name:{
+        type: String,
+        default: '',
+      },
+      name: {
+        type: String,
+        default: '',
+      },
+      email: {
+        type: String,
+        default: '',
+      },
+      phone: {
+        type: String,
+        default: '',
+      },
+      share_amount: {type: Number, default: 0},
+      transfer_date: {type: Date, default: Date.now},
+    },
     charge_date: {type: Date, default: Date.now},
-    status: {
+    status: { 
       type: String,
-      enum: ['published', 'processing', 'completed'],
-      default: 'published',
+      enum: ['awaiting_for_payment', 'completed'],
+      default: 'awaiting_for_payment',
     },
   },
   {

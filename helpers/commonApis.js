@@ -3,15 +3,15 @@ const {validationResult} = require('express-validator')
 const bcrypt = require('bcrypt')
 const moment = require('moment')
 const apiResponse = require('./apiResponse')
-  
+
 exports.getPagination = async ({req, res, model, findOptions}) => {
   const order = req.query.order ? req.query.order : 'desc'
   const sortBy = req.query.sortBy ? req.query.sortBy : '_id'
   const page = req.query.page > 0 ? req.query.page : 1
   const perPage = req.query.limit ? parseInt(req.query.limit, 10) : 10
   const term = req.query.search
-  const {id} = req.params
-  if (term || id) {
+  const {check_cond} = req.params
+  if (term || check_cond) {
     const total = await model.count(findOptions).exec()
     model
       .find(findOptions)
@@ -54,8 +54,8 @@ exports.getPaginationWithPopulate = async ({req, res, model, findOptions, popula
   const page = req.query.page > 0 ? req.query.page : 1
   const perPage = req.query.limit ? parseInt(req.query.limit, 10) : 10
   const term = req.query.search
-  const {id} = req.params
-  if (term || id) {
+  const {check_cond} = req.params
+  if (term || check_cond) {
     const total = await model.count(findOptions).exec()
     model
       .find(findOptions)
@@ -138,14 +138,27 @@ exports.getItemWithPopulate = async ({query, Model, populateObject, res}) => {
   try {
     const item = await Model.findOne(query).populate(populateObject)
     if (!item) {
-      return apiResponse.ErrorResponse(res, 'Not found!')
+      return apiResponse.notFoundResponse(
+        res,
+        'Beklager, vi finner ikke dataen du ser etter.',
+        'Not found!'
+      )
     }
 
-    return apiResponse.successResponseWithData(res, 'Operation success', item)
+    return apiResponse.successResponseWithData(
+      res,
+      'Data innhenting vellykket.',
+      'Data Fetched Successfully',
+      item
+    )
   } catch (err) {
-    return apiResponse.ErrorResponse(res, err.message)
+    return apiResponse.ErrorResponse(
+      res,
+      'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
+      'System went wrong, Kindly try again later'
+    )
   }
-}  
+}
 
 exports.softDelete = async ({req, res, Model, itemName}) => {
   try {
@@ -182,8 +195,7 @@ exports.softDelete = async ({req, res, Model, itemName}) => {
   }
 }
 
-exports.softDeleteWithConditionMany = async ({req, res, Model,cond, itemName}) => {
-
+exports.softDeleteWithConditionMany = async ({req, res, Model, cond, itemName}) => {
   try {
     const data = await Model.deleteMany()(cond)
     return apiResponse.successResponseWithData(
@@ -199,11 +211,9 @@ exports.softDeleteWithConditionMany = async ({req, res, Model,cond, itemName}) =
       'System went wrong, Kindly try again later'
     )
   }
- 
-} 
+}
 
-exports.softDeleteWithCondition = async ({req, res, Model,cond, itemName}) => {
-
+exports.softDeleteWithCondition = async ({req, res, Model, cond, itemName}) => {
   try {
     const data = await Model.deleteOne(cond)
     return apiResponse.successResponseWithData(
@@ -219,7 +229,6 @@ exports.softDeleteWithCondition = async ({req, res, Model,cond, itemName}) => {
       'System went wrong, Kindly try again later'
     )
   }
- 
 }
 
 exports.hardDelete = async ({req, res, Model, itemName}) => {
@@ -255,7 +264,10 @@ exports.hardDelete = async ({req, res, Model, itemName}) => {
 exports.createItem = async ({req, res, Model, itemName}) => {
   try {
     const {...itemDetails} = req.body
+    console.log(itemDetails)
     const errors = validationResult(req)
+
+    console.log(errors)
 
     if (!errors.isEmpty()) {
       return apiResponse.validationErrorWithData(
@@ -276,6 +288,7 @@ exports.createItem = async ({req, res, Model, itemName}) => {
             'Email already in use'
           )
         }
+        console.log(err)
         return apiResponse.ErrorResponse(
           res,
           'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
@@ -315,9 +328,7 @@ exports.createItemReturnData = async ({req, res, Model, itemName}) => {
   return createdItem.save()
 }
 
-exports.updateItemReturnData = async ({Model, cond, req, res}) => {
-  const {...itemDetails} = req.body
-
+exports.updateItemReturnData = async ({Model, cond, updateobject, req, res}) => {
   const errors = validationResult(req)
 
   if (!errors.isEmpty()) {
@@ -332,7 +343,7 @@ exports.updateItemReturnData = async ({Model, cond, req, res}) => {
   const updateRecord = await Model.findOneAndUpdate(
     cond,
     {
-      $set: itemDetails,
+      $set: updateobject,
     },
     {new: true}
   )
@@ -344,6 +355,7 @@ exports.updateItem = async ({req, res, Model, itemName}) => {
   try {
     const {...itemDetails} = req.body
 
+    console.log(req.body)
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
@@ -409,7 +421,6 @@ exports.updateItem = async ({req, res, Model, itemName}) => {
     )
   }
 }
-
 
 exports.getItemWithPopulate = async ({query, Model, populateObject, res}) => {
   try {

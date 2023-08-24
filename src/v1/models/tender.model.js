@@ -3,8 +3,8 @@ const mongooseDelete = require('mongoose-delete')
 
 const tenderSchema = new mongoose.Schema(
   {
-    receiver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User',default: null},
-    picker_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
+    customer_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
+    driver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
     title: {type: String, default: ''},
     slug: {type: String, default: ''},
     files: [
@@ -13,8 +13,6 @@ const tenderSchema = new mongoose.Schema(
       },
     ],
     total_price: {type: Number, default: 0},
-    pickup_date: {type: Date, default: Date.now},
-    delivery_date: {type: Date, default: Date.now},
     tender_variations: [
       {
         text: {type: String, default: ''},
@@ -24,14 +22,45 @@ const tenderSchema = new mongoose.Schema(
         created_date: {type: Date, default: Date.now},
       },
     ],
+    pickup_date: {type: Date, default: Date.now},
+    delivery_date: {type: Date, default: Date.now},
+    order: {
+      order_no: {type: String, default: ''},
+      order_status: { 
+        type: String,
+        enum: ['awaiting_for_payment', 'payment_done', 'processing', 'on_the_way', 'completed'],
+        default: 'awaiting_for_payment',
+      },
+      order_current_location: { 
+        order_address: {
+          type: String,
+          default: '',
+        },
+        type: {
+          type: String,
+          enum: ['Point'],
+          default: 'Point',
+        },
+        coordinates: {
+          type: [Number],
+          default: [0, 0],
+        },
+      },
+    },
+
     location_from: {
       address: {
         type: String,
         default: '',
       },
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
       coordinates: {
-        longitude: {type: Number, default: 0},
-        latitude: {type: Number, default: 0},
+        type: [Number],
+        default: [0, 0],
       },
     },
     location_to: {
@@ -39,18 +68,23 @@ const tenderSchema = new mongoose.Schema(
         type: String,
         default: '',
       },
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
       coordinates: {
-        longitude: {type: Number, default: 0},
-        latitude: {type: Number, default: 0},
+        type: [Number],
+        default: [0, 0],
       },
     },
-
-    status: {
+    tender_status: {
       type: String,
       enum: ['published', 'accepted'],
       default: 'published',
     },
   },
+
   {
     timestamps: {
       createdAt: 'created_at',

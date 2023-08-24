@@ -155,7 +155,7 @@ const getUser = async (req, res, next) => {
     next(err)
   }
 }
-
+ 
 const getDetailProfile = async (req, res, next) => {
   try {
     const userId = req.params.id
@@ -596,6 +596,10 @@ const updateUser = async (req, res, next) => {
         "You are not allowed to update other user's data"
       )
     }
+    if (req.body.email) {
+      delete req.body.email;
+    }
+  
 
     // update user profile
     const updatedUser = await UserModel.findByIdAndUpdate(req.params.id, req.body, {
@@ -1016,6 +1020,8 @@ const loginFrontEndResendOtp = async (req, res, next) => {
 const createUserFrontEnd = async (req, res, next) => {
   try {
     const {email, password} = req.body
+
+    
 
     function isValidEmail(value) {
       const re =

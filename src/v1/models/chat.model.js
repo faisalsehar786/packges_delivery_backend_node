@@ -3,20 +3,37 @@ const mongooseDelete = require('mongoose-delete')
 
 const chatSchema = new mongoose.Schema(
   {
-    order_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Order'},
-    tender_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Tender'},
-    sender_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    receiver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    files: [
-      {
-        path: {type: String, default: ''},
-      }, 
-    ],
-    body: {type: String, default: ''},
-    read: {type: Boolean, default: false},
+    tender_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Tender', default: null},
+    senderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    recepientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    messageType: {
+      type: String,
+      enum: ['text', 'image'],
+      default: 'text',
+    },
+    message: {
+      type: String,
+      default: '',
+    },
+    imageUrl: {
+      type: String,
+      default: '',
+    },
+    message_date: {type: Date, default: Date.now},
   },
   {
-    timestamps: true,
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
   }
 )
 chatSchema.plugin(mongooseDelete, {overrideMethods: 'all'})

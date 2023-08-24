@@ -18,10 +18,25 @@ const userSchema = new mongoose.Schema(
     mobile_number: {type: String, default: ''},
     birth_date: {type: String, default: Date.now},
     image: {type: String, default: ''},
-    status: {
+    status: { 
       type: String,
       enum: ['active', 'blocked', 'pending_verification'],
       default: 'active',
+    },
+    current_location: {
+      address: {
+        type: String,
+        default: '',
+      },
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number],
+        default: [0,0],
+      },
     },
     user_type: {type: Array, default: [{role: 'customer'}, {role: 'driver'}]},
     push_token: {type: String},
