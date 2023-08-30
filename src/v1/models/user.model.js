@@ -16,9 +16,14 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     mobile_number: {type: String, default: ''},
+    rating: {
+      type: Number,
+      default: 0,
+    },
+
     birth_date: {type: String, default: Date.now},
     image: {type: String, default: ''},
-    status: { 
+    status: {
       type: String,
       enum: ['active', 'blocked', 'pending_verification'],
       default: 'active',
@@ -35,7 +40,7 @@ const userSchema = new mongoose.Schema(
       },
       coordinates: {
         type: [Number],
-        default: [0,0],
+        default: [0, 0],
       },
     },
     user_type: {type: Array, default: [{role: 'customer'}, {role: 'driver'}]},
@@ -78,8 +83,11 @@ userSchema.methods.checkPassword = (password, passwordHash) => {
   })
 }
 
+
+
 userSchema.virtual('fullName').get(() => `${this.firstName} ${this.lastName}`)
 
+userSchema.index({ current_location: "2d" });
 userSchema.plugin(mongooseDelete, {overrideMethods: 'all'})
 
 module.exports = mongoose.model('User', userSchema)

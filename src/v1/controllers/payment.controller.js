@@ -1,15 +1,38 @@
-const paymentModel = require('../models/payment.model')  
+const paymentModel = require('../models/payment.model')
+const TenderModel = require('../models/tender.model')
+const {slugify} = require('../../../utils/customfunctions')
+const apiResponse = require('../../../helpers/apiResponse')
+const {v1: uuidv1, v4: uuidv4} = require('uuid')
 const {
   getPagination,
   getItem,
   softDelete,
   updateItem,
   createItem,
-  totalItemsCustomQuery,  
-} = require('../../../helpers/commonApis')   
-  
+  totalItemsCustomQuery,
+  getFilterOptions,
+  getPaginationWithPopulate,
+  getItemWithPopulate,
+} = require('../../../helpers/commonApis')
+
 const createPayment = async (req, res, next) => {
-  try { 
+  const check = await TenderModel.findOne({_id: req?.body?.tender_id})
+
+  if (!check) {
+    return apiResponse.notFoundResponse(
+      res,
+      'Beklager, vi finner ikke dataen du ser etter.',
+      'Tedner Not found IN DB!'
+    )
+  }
+
+  req.body.order_no = check?.order.order_no
+  req.body.customer_id = check?.customer_id
+  req.body.driver_id = check?.driver_id
+  req.body.tender_id = check?._id
+  console.log(req.body)
+
+  try {
     await createItem({
       req,
       res,
@@ -24,7 +47,46 @@ const createPayment = async (req, res, next) => {
 const getPayment = async (req, res, next) => {
   try {
     const itemId = req.params.id
-    return await getItem({id: itemId, Model: paymentModel, res})
+    getItemWithPopulate({
+      query: {_id: itemId},
+      Model: paymentModel,
+      populateObject: [
+        {
+          path: 'customer_id',
+          select: {
+            first_name: 1,
+            last_name: 1,
+            email: 1,
+            mobile_number: 1,
+            current_location: 1,
+            image: 1,
+          },
+        },
+        {
+          path: 'driver_id',
+          select: {
+            first_name: 1,
+            last_name: 1,
+            email: 1,
+            mobile_number: 1,
+            current_location: 1,
+            image: 1,
+          },
+        },
+        {
+          path: 'tender_id',
+          select: {
+            first_name: 1,
+            last_name: 1,
+            email: 1,
+            mobile_number: 1,
+            current_location: 1,
+            image: 1,
+          },
+        },
+      ],
+      res,
+    })
   } catch (err) {
     next(err)
   }
@@ -32,20 +94,60 @@ const getPayment = async (req, res, next) => {
 
 const getPayments = async (req, res, next) => {
   try {
-    const term = req.query.search
-    return await getPagination({
+    const order_no = req.query.order_no ? req.query.order_no : ''
+    const status = req.query.status ? req.query.status : 'all'
+    const filter = getFilterOptions(req)
+    let andCod = []
+    let orCod = []
+    if (order_no) {
+      andCod.push({order_no: order_no})
+    }
+    if (status != 'all' && status) {
+      andCod.push({status: status})
+    }
+
+    return await getPaginationWithPopulate({
       req,
       res,
       model: paymentModel,
       findOptions: {
-        $or: [{Payment_no: {$regex: term, $options: 'i'}}],
+        $and: andCod.length > 0 ? andCod : [{}],
+        $or: orCod.length > 0 ? orCod : [{}],
+        ...filter,
       },
+      populateObject: [
+        {
+          path: 'customer_id',
+          select: {
+            first_name: 1,
+            last_name: 1,
+            email: 1,
+            mobile_number: 1,
+            current_location: 1,
+            image: 1,
+          },
+        },
+        {
+          path: 'driver_id',
+          select: {
+            first_name: 1,
+            last_name: 1,
+            email: 1,
+            mobile_number: 1,
+            current_location: 1,
+            image: 1,
+          },
+        },
+        {
+          path: 'tender_id',
+        },
+      ],
     })
   } catch (err) {
     next(err)
   }
 }
-        
+  
 const deletePayment = async (req, res, next) => {
   try {
     await softDelete({
@@ -72,6 +174,34 @@ const updatePayment = async (req, res, next) => {
   }
 }
 
+const checkPaymentStatusofOrder = async (req, res, next) => {
+  try {
+    const {order_no, customer_id} = req?.query
+    let andCod = [{status: 'completed'}]
+    if (order_no) {
+      andCod.push({order_no: order_no})
+    }
+    if (customer_id) {
+      andCod.push({customer_id: customer_id})
+    }
+
+    const findOptions = {
+      $and: andCod.length > 0 ? andCod : [{}],
+    }
+    const check = await paymentModel.count(findOptions).exec()
+    return apiResponse.successResponseWithData(
+      res,
+      'Data innhenting vellykket.',
+      'Data Fetched Successfully',
+      {
+        payment: check ? true : false,
+      }
+    )
+  } catch (err) {
+    next(err)
+  }
+}
+
 const totalPayments = async (req, res, next) => {
   try {
     await totalItemsCustomQuery({
@@ -93,4 +223,5 @@ module.exports = {
   deletePayment,
   updatePayment,
   totalPayments,
+  checkPaymentStatusofOrder,
 }

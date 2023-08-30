@@ -10,7 +10,7 @@ exports.getPagination = async ({req, res, model, findOptions}) => {
   const page = req.query.page > 0 ? req.query.page : 1
   const perPage = req.query.limit ? parseInt(req.query.limit, 10) : 10
   const term = req.query.search
-  const {check_cond} = req.params
+  const {check_cond} = req.query
   if (term || check_cond) {
     const total = await model.count(findOptions).exec()
     model
@@ -54,7 +54,9 @@ exports.getPaginationWithPopulate = async ({req, res, model, findOptions, popula
   const page = req.query.page > 0 ? req.query.page : 1
   const perPage = req.query.limit ? parseInt(req.query.limit, 10) : 10
   const term = req.query.search
-  const {check_cond} = req.params
+  const {check_cond} =  req.query  
+
+  console.log(findOptions)
   if (term || check_cond) {
     const total = await model.count(findOptions).exec()
     model
@@ -66,6 +68,7 @@ exports.getPaginationWithPopulate = async ({req, res, model, findOptions, popula
       .sort([[sortBy, order]])
       .exec((err, data) => {
         if (err) {
+          console.log(err,data)
           return apiResponse.ErrorResponse(
             res,
             'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
@@ -354,7 +357,6 @@ exports.updateItemReturnData = async ({Model, cond, updateobject, req, res}) => 
 exports.updateItem = async ({req, res, Model, itemName}) => {
   try {
     const {...itemDetails} = req.body
-
     console.log(req.body)
     const errors = validationResult(req)
 
@@ -376,6 +378,7 @@ exports.updateItem = async ({req, res, Model, itemName}) => {
     }
     Model.findById(req.params.id, async (err, foundItem) => {
       if (err) {
+        console.log(err)
         return apiResponse.ErrorResponse(
           res,
           'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
@@ -414,6 +417,7 @@ exports.updateItem = async ({req, res, Model, itemName}) => {
       )
     })
   } catch (err) {
+    console.log(err)
     return apiResponse.ErrorResponse(
       res,
       'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
@@ -421,7 +425,7 @@ exports.updateItem = async ({req, res, Model, itemName}) => {
     )
   }
 }
-
+ 
 exports.getItemWithPopulate = async ({query, Model, populateObject, res}) => {
   try {
     const item = await Model.findOne(query).populate(populateObject)

@@ -8,20 +8,31 @@ const {checkAuthOrigins} = require('../../../middlewares/authMiddlewareGenericAl
 const {checkAdminUserAuth} = require('../../../middlewares/authMiddlewareAdminPanel')
 const {checkAuthGuard} = require('../../../middlewares/authGuard')
 const Roles = require('../../../utils/roles')
-const {
-  passwordValidation,
-  validateRequest,
-} = require("./authValidation/authValidation"); 
+const {passwordValidation, validateRequest} = require('./authValidation/authValidation')
 
 router.get('/get_all', checkAdminUserAuth, userController.getUsers)
 router.post('/vipps_login_auth_uri', userController.loginVippsAuthUri)
 router.post('/vipps_login', userController.loginVippsUserInfo)
-
+  
 router.get(
   '/detail_profile/:id',
   checkAuthOrigins,
-  checkAuthGuard([Roles.Admin, Roles.Manager]),
+  // checkAuthGuard([Roles.Admin, Roles.Manager]),
   userController.getDetailProfile
+)
+
+router.get(
+  '/detail_profile_driver/:id',
+  checkAuthOrigins,
+  // checkAuthGuard([Roles.Admin, Roles.Manager]),
+  userController.getDetailProfileDriver
+)   
+
+router.get(
+  '/detail_profile_customer/:id',
+  checkAuthOrigins,
+  // checkAuthGuard([Roles.Admin, Roles.Manager]),
+  userController.getDetailProfileCustomer
 )
 
 router.post('/login_test', userController.loginUser)
@@ -54,7 +65,7 @@ router.post(
   userController.changeUserFrontEndUserPassword
 )
 //////////////////////////////////////////////////////////////////////
- 
+
 router.get('/refresh_token', userController.refreshTokenUser)
 router.get('/logout', checkUserAuth, checkAuthGuard([Roles.User]), userController.logout)
 router.get(

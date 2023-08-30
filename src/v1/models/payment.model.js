@@ -3,17 +3,17 @@ const mongooseDelete = require('mongoose-delete')
 
 const paymentSchema = new mongoose.Schema(
   {
-    receiver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
-    picker_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
+    customer_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
+    driver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
     tender_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Tender', default: null},
     order_no: { type: String, required: true },
     payment_method: { type: String},
-    paid_price: {type: Number, default: 0}, 
+    paid_price: {type: Number, default: 0},  
     fee: {type: Number, default: 0},
     tax: {type: Number, default: 0},
-    receiver_share_amount: {type: Number, default: 0},
-    picker_share_amount: {type: Number, default: 0},
-    platfrom_share_: {
+    customer_share_amount: {type: Number, default: 0},
+    driver_share_amount: {type: Number, default: 0},
+    platfrom_share: {
       platfrom_name:{
         type: String,
         default: '',

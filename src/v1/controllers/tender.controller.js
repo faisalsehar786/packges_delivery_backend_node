@@ -17,8 +17,11 @@ const {
 } = require('../../../helpers/commonApis')
 
 const createTender = async (req, res, next) => {
-  const images = req?.files?.map((item) => ({path: item?.location}))
-  req.body.files = images?.length > 0 ? images : req.body.files
+  if (req?.files) {
+    const images = req?.files?.map((item) => ({path: item?.location}))
+    req.body.files = images?.length > 0 ? images : []
+  }
+
   req.body.slug = slugify(req.body.title)
   req.body.customer_id = req.user.id
   req.body.order = {
@@ -104,9 +107,14 @@ const getTender = async (req, res, next) => {
 
 const updateTender = async (req, res, next) => {
   try {
-    const images = req?.files?.map((item) => ({path: item?.location}))
-    images?.length > 0 ? (req.body.files = images) : req?.body.files
-    req.body.slug = slugify(req.body.title)
+    if (req?.files) {
+      const images = req?.files?.map((item) => ({path: item?.location}))
+      req.body.files = images?.length > 0 ? images : []
+    }
+    if (req.body.title) {
+      req.body.slug = slugify(req.body.title)
+    }
+
     await updateItem({
       req,
       res,
@@ -133,16 +141,32 @@ const deleteTender = async (req, res, next) => {
 
 const getTenders = async (req, res, next) => {
   try {
-    const term = req?.query?.search
+    const term = req?.query?.search ? req?.query?.search : ''
+    const status = req?.query?.status ? req?.query?.status : 'all'
+    const order_status = req?.query?.order_status ? req?.query?.order_status : 'all'
     const filter = getFilterOptions(req)
     const user_id = req.user.id
+
+    let andCod = [{customer_id: user_id}]
+    let orCod = []
+
+    if (term) {
+      orCod.push({title: {$regex: term, $options: 'i'}})
+    }
+    if (status != 'all' && status) {
+      andCod.push({tender_status: status})
+    }
+    if (order_status != 'all' && order_status) {
+      andCod.push({'order.order_status': order_status})
+    }
+
     return await getPaginationWithPopulate({
       req,
       res,
       model: TenderModel,
       findOptions: {
-        $and: [{customer_id: user_id}],
-        $or: [{title: {$regex: term, $options: 'i'}}],
+        $and: andCod.length > 0 ? andCod : [{}],
+        $or: orCod.length > 0 ? orCod : [{}],
         ...filter,
       },
 
@@ -175,245 +199,6 @@ const getTenders = async (req, res, next) => {
     next(err)
   }
 }
-
-///////////////////////// Driver requests///////////////////////////
-
-const createDriverReuest = async (req, res, next) => {
-  try {
-    await createItem({
-      req,
-      res,
-      Model: DriverReuest,
-      itemName: 'Driver Request',
-    })
-  } catch (err) {
-    next(err)
-  }
-}
-
-const availableDriversForTender = async (req, res, next) => {
-  try {
-    const customer_id = req.query.customer_id
-    const tender_id = req.query.tender_id
-    const term = req.query.search
-    const filter = getFilterOptions(req)
-    return await getPaginationWithPopulate({
-      req,
-      res,
-      model: DriverReuest,
-      findOptions: {
-        $and: [{customer_id: customer_id}, {tender_id: tender_id}],
-        $or: [{title: {$regex: term, $options: 'i'}}],
-        ...filter,
-      },
-
-      populateObject: [
-        {
-          path: 'customer_id',
-          select: {
-            first_name: 1,
-            last_name: 1,
-            email: 1,
-            mobile_number: 1,
-            current_location: 1,
-            image: 1,
-          },
-        },
-        {
-          path: 'driver_id',
-          select: {
-            first_name: 1,
-            last_name: 1,
-            email: 1,
-            mobile_number: 1,
-            current_location: 1,
-            image: 1,
-          },
-        },
-        {
-          path: 'tender_id',
-        },
-      ],
-    })
-  } catch (err) {
-    next(err)
-  }
-}
-
-const acceptDriverRequestForTender = async (req, res, next) => {
-  try {
-    const {tender_id, order_no} = req.body
-    const foundItem = await PaymentModal.findOne({
-      $and: [{status: 'completed'}],
-      $or: [{tender_id: tender_id}, {order_no: order_no}],
-    })
-    if (!foundItem) {
-      await DriverReuest.updateMany({tender_id: tender_id}, {status: 'published'})
-      const updateRecord = await updateItemReturnData({
-        Model: DriverReuest,
-        cond: {
-          _id: req.params.id,
-        },
-        updateobject: {
-          status: 'accepted',
-        },
-        req,
-        res,
-      })
-      if (updateRecord) {
-        await updateItemReturnData({
-          Model: TenderModel,
-          cond: {
-            _id: updateRecord?.tender_id,
-          },
-          updateobject: {
-            tender_status: 'accepted',
-          },
-          req,
-          res,
-        })
-      }
-      return apiResponse.successResponseWithData(
-        res,
-        'oppdatert',
-        `your payment  done against this order or tender`,
-        {payment: false, status: 'accepted'}
-      )
-    } else {
-      await DriverReuest.updateMany({tender_id: tender_id}, {status: 'published'})
-      const updateRecord = await updateItemReturnData({
-        Model: DriverReuest,
-        cond: {
-          _id: req.params.id,
-        },
-        updateobject: {
-          status: 'accepted',
-        },
-        req,
-        res,
-      })
-      if (updateRecord) {
-        await updateItemReturnData({
-          Model: TenderModel,
-          cond: {
-            _id: updateRecord?.tender_id,
-          },
-          updateobject: {
-            tender_status: 'accepted',
-          },
-          req,
-          res,
-        })
-      }
-
-      return apiResponse.successResponseWithData(
-        res,
-        'oppdatert',
-        `your payment  done against this order or tender`,
-        {payment: true, status: 'accepted'}
-      )
-    }
-  } catch (err) {
-    next(err)
-  }
-}
-
-////////////////////////////end driver requests///////////////////////////////
-
-///////////////////////// Order requests///////////////////////////
-
-const createOrderofTender = async (req, res, next) => {
-  try {
-    await createItem({
-      req,
-      res,
-      Model: DriverReuest,
-      itemName: 'Driver Request',
-    })
-  } catch (err) {
-    next(err)
-  }
-}
-
-const updateOrderofTender = async (req, res, next) => {
-  try {
-    const {tender_id, order_no} = req.body
-    const foundItem = await PaymentModal.findOne({
-      $and: [{status: 'completed'}],
-      $or: [{tender_id: tender_id}, {order_no: order_no}],
-    })
-    if (!foundItem) {
-      await DriverReuest.updateMany({tender_id: tender_id}, {status: 'published'})
-      const updateRecord = await updateItemReturnData({
-        Model: DriverReuest,
-        cond: {
-          _id: req.params.id,
-        },
-        updateobject: {
-          status: 'accepted',
-        },
-        req,
-        res,
-      })
-      if (updateRecord) {
-        await updateItemReturnData({
-          Model: TenderModel,
-          cond: {
-            _id: updateRecord?.tender_id,
-          },
-          updateobject: {
-            tender_status: 'accepted',
-          },
-          req,
-          res,
-        })
-      }
-      return apiResponse.successResponseWithData(
-        res,
-        'oppdatert',
-        `your payment  done against this order or tender`,
-        {payment: false, status: 'accepted'}
-      )
-    } else {
-      await DriverReuest.updateMany({tender_id: tender_id}, {status: 'published'})
-      const updateRecord = await updateItemReturnData({
-        Model: DriverReuest,
-        cond: {
-          _id: req.params.id,
-        },
-        updateobject: {
-          status: 'accepted',
-        },
-        req,
-        res,
-      })
-      if (updateRecord) {
-        await updateItemReturnData({
-          Model: TenderModel,
-          cond: {
-            _id: updateRecord?.tender_id,
-          },
-          updateobject: {
-            tender_status: 'accepted',
-          },
-          req,
-          res,
-        })
-      }
-
-      return apiResponse.successResponseWithData(
-        res,
-        'oppdatert',
-        `your payment  done against this order or tender`,
-        {payment: true, status: 'accepted'}
-      )
-    }
-  } catch (err) {
-    next(err)
-  }
-}
-
-////////////////////////////end order requests///////////////////////////////
 
 module.exports = {
   createTender,
@@ -421,7 +206,4 @@ module.exports = {
   getTenders,
   deleteTender,
   updateTender,
-  createDriverReuest,
-  availableDriversForTender,
-  acceptDriverRequestForTender,
 }

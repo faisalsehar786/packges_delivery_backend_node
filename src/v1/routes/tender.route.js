@@ -11,10 +11,12 @@ router.post(
   checkUserAuth,
   mediaUpload.array('files', 5),
   [
-    body('total_price', 'Price id must not be empty.').isLength({min: 1}).isNumeric().trim(),
+    body('total_price', 'Price must not be empty.').isLength({min: 1}).isNumeric().trim(),
     body('title', 'title must not be empty.').isLength({min: 1}).trim(),
     // body('location_to').isLength({min: 1}).trim(),
     // body('location_from').isLength({min: 1}).trim(),
+    body('delivery_date').isLength({min: 1}).trim(),
+    body('pickup_date').isLength({min: 1}).trim(),
     // body('tender_variations').isArray(),
     // body('*.weight').isNumeric().not().isEmpty(),
     // body('*.height').isNumeric().not().isEmpty(),
@@ -30,23 +32,4 @@ router.patch(
   tenderController.updateTender
 )
 
-router.post(
-  '/driver_request_to_customer_for_tender',
-  checkUserAuth,
-
-  [
-    body('customer_id').not().isEmpty(),
-    body('driver_id').not().isEmpty(),
-    body('tender_id').not().isEmpty(),
-  ],
-  tenderController.createDriverReuest
-)
-
-router.get(
-  '/available_drivers_for_tender',
-  checkUserAuth,
-  tenderController.availableDriversForTender
-)
-
-router.patch('/accept_driver_request_for_tender/:id', checkUserAuth, tenderController.acceptDriverRequestForTender)
 module.exports = router

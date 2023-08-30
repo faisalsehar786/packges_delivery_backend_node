@@ -22,16 +22,34 @@ const tenderSchema = new mongoose.Schema(
         created_date: {type: Date, default: Date.now},
       },
     ],
+    order_awarded: [
+      {
+        awarded_to_driver: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
+        order_awarded_status: {
+          type: String,
+          enum: ['accepted', 'cancel', 'completed'],
+          default: 'accepted',
+        },
+        created_date: {type: Date, default: Date.now}, 
+      },
+    ], 
     pickup_date: {type: Date, default: Date.now},
     delivery_date: {type: Date, default: Date.now},
     order: {
       order_no: {type: String, default: ''},
-      order_status: { 
+      order_status: {
         type: String,
-        enum: ['awaiting_for_payment', 'payment_done', 'processing', 'on_the_way', 'completed'],
+        enum: [
+          'awaiting_for_payment',
+          'payment_done',
+          'processing',
+          'on_the_way',
+          'completed',
+          'cancel',
+        ],
         default: 'awaiting_for_payment',
       },
-      order_current_location: { 
+      order_current_location: {
         order_address: {
           type: String,
           default: '',
@@ -92,6 +110,7 @@ const tenderSchema = new mongoose.Schema(
     },
   }
 )
+tenderSchema.index({ location_from: "2dsphere" });
 tenderSchema.plugin(mongooseDelete, {overrideMethods: 'all'})
 
 module.exports = mongoose.model('Tender', tenderSchema)
