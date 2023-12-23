@@ -14,9 +14,7 @@
     "build": "webpack --mode development",
     "start:prod": "node dist/server.js"
   },
-  "engines": {
-    "node": "16.x"
-  },
+ 
   "imports": {
     ".": "app.js",
     "#src/*": "./src/*",
