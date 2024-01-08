@@ -2,12 +2,16 @@
   "name": "stotte-rest-api",
   "version": "1.0.0",
   "private": true,
-  "description": "Rest Api's for Stotte App",
-  "author": "Creative Heads",
+  "description": "Rest Api's for HMHY App",
+  "author": "faisal abbas",
   "contributors": [
-    "Huzaifa Asif <huzaifa@creativeheads.no>"
+    "Faisal Abbas <faisalsehar786@gmail.com>"
   ],
   "main": "app.js",
+   
+  "engines": {
+    "node": "16.x"
+  },
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
