@@ -13,9 +13,7 @@
   },
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js",
-    "build": "webpack --mode development",
-    "start:prod": "node dist/server.js"
+    "dev": "nodemon app.js"  
   },
   "license": "ISC",
   "keywords": [],
