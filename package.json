@@ -13,7 +13,18 @@
   },
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"  
+    "dev": "nodemon app.js"
+  },
+  "imports": {
+    ".": "app.js",
+    "#src/*": "./src/*",
+    "#routes/*": "./src/v1/routes/*.js",
+    "#controllers/*": "./src/v1/controllers/*.js",
+    "#models/*": "./src/v1/models/*.js",
+    "#utils/*": "./utils/*.js",
+    "#config/*": "./config/*.js",
+    "#helpers/*": "./helpers/*.js",
+    "#middlewares/*": "./middlewares/*.js"
   },
   "license": "ISC",
   "keywords": [],
@@ -82,4 +93,4 @@
     "nyc": "^15.1.0",
     "prettier": "^2.7.1"
   }
-}
+} 
