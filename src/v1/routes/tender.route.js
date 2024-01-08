@@ -5,7 +5,7 @@ const {checkUserAuth} = require('../../../middlewares/authMiddleware')
 const mediaUpload = require('../../../middlewares/upload-aws-image')
 const {body} = require('express-validator')
 router.get('/get_all', checkUserAuth, tenderController.getTenders)
-router.get('/details/:id', checkUserAuth, tenderController.getTender)
+router.get('/details/:id',  tenderController.getTender)
 router.post(
   '/create_tender',
   checkUserAuth,

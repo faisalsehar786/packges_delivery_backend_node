@@ -84,7 +84,7 @@ const getChatsUsers = async (req, res, next) => {
            * query: The query in MQL.
            */
           {
-            senderId: new ObjectId(req?.user?.id),
+            recepientId: new ObjectId(req?.user?.id),
           },
       },
       {
@@ -103,7 +103,7 @@ const getChatsUsers = async (req, res, next) => {
            * fieldN: The first field name.
            */
           {
-            _id: '$recepientId',
+            _id: '$senderId',
             notification: {
               $push: '$$ROOT',
             },

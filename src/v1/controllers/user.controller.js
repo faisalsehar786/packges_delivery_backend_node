@@ -159,7 +159,7 @@ const getUser = async (req, res, next) => {
 
 const getDetailProfileDriver = async (req, res, next) => {
   try {
-    const userId = req?.user?.id
+    const userId = req?.params?.id
 
     if (!userId) {
       return apiResponse.validationErrorWithData(
@@ -424,7 +424,7 @@ const getDetailProfileDriver = async (req, res, next) => {
 
 const getDetailProfileCustomer = async (req, res, next) => {
   try {
-    const userId = req?.user?.id
+    const userId = req?.params?.id
     if (!userId) {
       return apiResponse.validationErrorWithData(
         res,

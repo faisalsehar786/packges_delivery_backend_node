@@ -22,14 +22,14 @@ router.get(
 )
 
 router.get(
-  '/detail_profile_driver',
+  '/detail_profile_driver/:id',
   checkAuthOrigins,
   // checkAuthGuard([Roles.Admin, Roles.Manager]),
   userController.getDetailProfileDriver
 )   
   
 router.get(
-  '/detail_profile_customer',
+  '/detail_profile_customer/:id',
   checkAuthOrigins,
   // checkAuthGuard([Roles.Admin, Roles.Manager]),
   userController.getDetailProfileCustomer
