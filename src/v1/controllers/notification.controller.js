@@ -258,6 +258,21 @@ const notificationMarkAsRead = async (req, res, next) => {
   }
 }
 
+
+const totalnotificationUnRead = async (req, res, next) => {
+  try {
+    const fetchId = req.user.id
+    const totalItems = await notification
+      .count({
+        $and: [{user_id: new ObjectId(fetchId)}, {read: false}],
+      })
+      .exec()
+
+    return res.status(200).json({success: true, unread_notifications_count: totalItems})
+  } catch (err) {
+    next(err)
+  }
+}
 module.exports = {
   createnotification,
   updatenotification,
@@ -267,4 +282,5 @@ module.exports = {
   deletenotification,
   getOneSignalNotification,
   notificationMarkAsRead,
-}
+  totalnotificationUnRead,
+}  

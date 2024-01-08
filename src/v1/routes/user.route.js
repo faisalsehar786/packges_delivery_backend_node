@@ -22,18 +22,26 @@ router.get(
 )
 
 router.get(
-  '/detail_profile_driver/:id',
+  '/detail_profile_driver',
   checkAuthOrigins,
   // checkAuthGuard([Roles.Admin, Roles.Manager]),
   userController.getDetailProfileDriver
 )   
-
+  
 router.get(
-  '/detail_profile_customer/:id',
+  '/detail_profile_customer',
   checkAuthOrigins,
   // checkAuthGuard([Roles.Admin, Roles.Manager]),
   userController.getDetailProfileCustomer
 )
+
+
+router.get(
+  '/detail_profile_stats',
+  checkAuthOrigins,
+  userController.getDetailProfileStatsData
+)
+   
 
 router.post('/login_test', userController.loginUser)
 //////////////////////////////////////////////////////////////

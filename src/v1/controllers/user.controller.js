@@ -159,9 +159,8 @@ const getUser = async (req, res, next) => {
 
 const getDetailProfileDriver = async (req, res, next) => {
   try {
-    const userId = req.params.id
+    const userId = req?.user?.id
 
-    console.log(userId)
     if (!userId) {
       return apiResponse.validationErrorWithData(
         res,
@@ -178,6 +177,7 @@ const getDetailProfileDriver = async (req, res, next) => {
         'Invalid Data'
       )
     }
+
     const aggregateCondition = [
       {
         $match:
@@ -415,7 +415,7 @@ const getDetailProfileDriver = async (req, res, next) => {
       res,
       'Brukerdetaljene ble hentet',
       'User detail fetched successfully',
-      userDetail?.length>0?userDetail[0]:null
+      userDetail?.length > 0 ? userDetail[0] : null
     )
   } catch (err) {
     next(err)
@@ -424,7 +424,7 @@ const getDetailProfileDriver = async (req, res, next) => {
 
 const getDetailProfileCustomer = async (req, res, next) => {
   try {
-    const userId = req.params.id
+    const userId = req?.user?.id
     if (!userId) {
       return apiResponse.validationErrorWithData(
         res,
@@ -657,7 +657,6 @@ const getDetailProfileCustomer = async (req, res, next) => {
               ],
             },
           },
-          
         },
       },
     ]
@@ -667,7 +666,7 @@ const getDetailProfileCustomer = async (req, res, next) => {
       res,
       'Brukerdetaljene ble hentet',
       'User detail fetched successfully',
-      userDetail?.length>0?userDetail[0]:null
+      userDetail?.length > 0 ? userDetail[0] : null
     )
   } catch (err) {
     next(err)
@@ -1247,7 +1246,7 @@ const loginUser = async (req, res, next) => {
         push_token: req.body.push_token ? req.body.push_token : '',
       }
     )
-    // await user.save()
+    await user.save()
 
     user.password = undefined
     res.set('Authorization', `Bearer ${refreshToken}`)
@@ -1709,11 +1708,500 @@ const changeUserFrontEndUserPassword = async (req, res, next) => {
   }
 }
 
+const getDetailProfileStatsData = async (req, res, next) => {
+  const userId = req?.user?.id
+  if (!userId) {
+    return apiResponse.validationErrorWithData(
+      res,
+      'Beklager, det oppstod en valideringsfeil.',
+      'Validation Error',
+      'Invalid Data'
+    )
+  }
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return apiResponse.validationErrorWithData(
+      res,
+      'Beklager, det oppstod en valideringsfeil.',
+      'Validation Error',
+      'Invalid Data'
+    )
+  }
+
+  /////// customer stats
+  const aggregateCondition1 = [
+    {
+      $match:
+        /**
+         * query: The query in MQL.
+         */
+        {
+          $or: [
+            // {
+            //   'order_awarded.awarded_to_driver': new ObjectId(userId),
+            // },
+            {
+              customer_id: new ObjectId(userId),
+            },
+          ],
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          driver_order_completed: {
+            $size: {
+              $filter: {
+                input: '$order_awarded',
+                as: 'orderAwarded',
+                cond: {
+                  $and: [
+                    {
+                      $eq: ['$$orderAwarded.order_awarded_status', 'completed'],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          driver_order_cancel: {
+            $size: {
+              $filter: {
+                input: '$order_awarded',
+                as: 'orderAwarded',
+                cond: {
+                  $and: [
+                    {
+                      $eq: ['$$orderAwarded.order_awarded_status', 'cancel'],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          driver_order_accepted: {
+            $size: {
+              $filter: {
+                input: '$order_awarded',
+                as: 'orderAwarded',
+                cond: {
+                  $and: [
+                    {
+                      $eq: ['$$orderAwarded.order_awarded_status', 'accepted'],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+    },
+    {
+      $lookup:
+        /**
+         * from: The target collection.
+         * localField: The local join field.
+         * foreignField: The target join field.
+         * as: The name for the results.
+         * pipeline: Optional pipeline to run on the foreign collection.
+         * let: Optional variables to use in the pipeline field stages.
+         */
+        {
+          from: 'payments',
+          localField: 'driver_id',
+          foreignField: 'driver_id',
+          as: 'driver_payments',
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          driver_total_earning_array: {
+            $filter: {
+              input: '$driver_payments',
+              as: 'payment',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$payment.status', 'completed'],
+                  },
+                ],
+              },
+            },
+          },
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          driver_total_earning: {
+            $sum: '$driver_total_earning_array.driver_share_amount',
+          },
+        },
+    },
+    {
+      $group: {
+        _id: 'stats',
+        total: {
+          $sum: 1,
+        },
+        tender_published: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$tender_status', 'published'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        tender_accepted: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$tender_status', 'accepted'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_awaiting_for_payment: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'awaiting_for_payment'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_payment_done: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'payment_done'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_processing: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'processing'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_on_the_way: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'on_the_way'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_completed: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'completed'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_cancel: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'cancel'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+  ]
+  const userDetail1 = await TenderModel.aggregate(aggregateCondition1)
+
+  ///////driver Stats//////////////
+
+  const aggregateCondition2 = [
+    {
+      $match:
+        /**
+         * query: The query in MQL.
+         */
+        {
+          $or: [
+            {
+              'order_awarded.awarded_to_driver': new ObjectId(userId),
+            },
+            {
+              driver_id: new ObjectId(userId),
+            },
+          ],
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          driver_order_completed: {
+            $size: {
+              $filter: {
+                input: '$order_awarded',
+                as: 'orderAwarded',
+                cond: {
+                  $and: [
+                    {
+                      $eq: ['$$orderAwarded.order_awarded_status', 'completed'],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          driver_order_cancel: {
+            $size: {
+              $filter: {
+                input: '$order_awarded',
+                as: 'orderAwarded',
+                cond: {
+                  $and: [
+                    {
+                      $eq: ['$$orderAwarded.order_awarded_status', 'cancel'],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          driver_order_accepted: {
+            $size: {
+              $filter: {
+                input: '$order_awarded',
+                as: 'orderAwarded',
+                cond: {
+                  $and: [
+                    {
+                      $eq: ['$$orderAwarded.order_awarded_status', 'accepted'],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+    },
+    {
+      $lookup:
+        /**
+         * from: The target collection.
+         * localField: The local join field.
+         * foreignField: The target join field.
+         * as: The name for the results.
+         * pipeline: Optional pipeline to run on the foreign collection.
+         * let: Optional variables to use in the pipeline field stages.
+         */
+        {
+          from: 'payments',
+          localField: 'driver_id',
+          foreignField: 'driver_id',
+          as: 'driver_payments',
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          driver_total_earning_array: {
+            $filter: {
+              input: '$driver_payments',
+              as: 'payment',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$payment.status', 'completed'],
+                  },
+                ],
+              },
+            },
+          },
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          driver_total_earning: {
+            $sum: '$driver_total_earning_array.driver_share_amount',
+          },
+        },
+    },
+    {
+      $group: {
+        _id: 'stats',
+        total: {
+          $sum: 1,
+        },
+        tender_published: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$tender_status', 'published'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        tender_accepted: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$tender_status', 'accepted'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_awaiting_for_payment: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'awaiting_for_payment'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_payment_done: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'payment_done'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_processing: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'processing'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_on_the_way: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'on_the_way'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_completed: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'completed'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        order_cancel: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$order.order_status', 'cancel'],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        driver_order_completed: {
+          $sum: '$driver_order_completed',
+        },
+        driver_order_cancel: {
+          $sum: '$driver_order_cancel',
+        },
+        driver_order_accepted: {
+          $sum: '$driver_order_accepted',
+        },
+        driver_total_earning: {
+          $first: '$driver_total_earning',
+        },
+      },
+    },
+  ]
+  const userDetail2 = await TenderModel.aggregate(aggregateCondition2)
+
+  return apiResponse.successResponseWithData(
+    res,
+    'Brukerdetaljene ble hentet',
+    'User detail fetched successfully',  
+    {
+      customer_stats: userDetail1?.length > 0 ? userDetail1[0] : null,
+      driver_stats: userDetail2?.length > 0 ? userDetail2[0] : null,
+      user:req?.user
+    }
+  )
+}
+
 module.exports = {
   loginVippsAuthUri,
   loginVippsUserInfo,
   getUsers,
   getDetailProfile,
+  getDetailProfileStatsData,
   getUser,
   updateUser,
   deleteUser,
@@ -1732,4 +2220,3 @@ module.exports = {
   getDetailProfileCustomer,
   getDetailProfileDriver,
 }
-   
