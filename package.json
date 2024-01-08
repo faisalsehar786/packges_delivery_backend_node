@@ -8,27 +8,14 @@
     "Faisal Abbas <faisalsehar786@gmail.com>"
   ],
   "main": "app.js",
-   
   "engines": {
-    "node": "16.x"
+    "node": "16.16.0"
   },
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
     "build": "webpack --mode development",
     "start:prod": "node dist/server.js"
-  },
- 
-  "imports": {
-    ".": "app.js",
-    "#src/*": "./src/*",
-    "#routes/*": "./src/v1/routes/*.js",
-    "#controllers/*": "./src/v1/controllers/*.js",
-    "#models/*": "./src/v1/models/*.js",
-    "#utils/*": "./utils/*.js",
-    "#config/*": "./config/*.js",
-    "#helpers/*": "./helpers/*.js",
-    "#middlewares/*": "./middlewares/*.js"
   },
   "license": "ISC",
   "keywords": [],
