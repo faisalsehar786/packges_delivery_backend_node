@@ -5,7 +5,8 @@ const apiResponse = require("../../../helpers/apiResponse");
 
 /* GET home page. */
 router.get("/", (req, res) =>
-  apiResponse.successResponse(res, "Støtte Søknad", "Stotte Application")
+  apiResponse.successResponse(res, "HMHY Søknad", "HMHY Application")
 );
 
 module.exports = router;
+  
