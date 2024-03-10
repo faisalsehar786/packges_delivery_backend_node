@@ -13,7 +13,7 @@ const {passwordValidation, validateRequest} = require('./authValidation/authVali
 router.get('/get_all', checkAdminUserAuth, userController.getUsers)
 router.post('/vipps_login_auth_uri', userController.loginVippsAuthUri)
 router.post('/vipps_login', userController.loginVippsUserInfo)
-  
+
 router.get(
   '/detail_profile/:id',
   checkAuthOrigins,
@@ -26,8 +26,8 @@ router.get(
   checkAuthOrigins,
   // checkAuthGuard([Roles.Admin, Roles.Manager]),
   userController.getDetailProfileDriver
-)   
-  
+)
+
 router.get(
   '/detail_profile_customer/:id',
   checkAuthOrigins,
@@ -35,13 +35,7 @@ router.get(
   userController.getDetailProfileCustomer
 )
 
-
-router.get(
-  '/detail_profile_stats',
-  checkAuthOrigins,
-  userController.getDetailProfileStatsData
-)
-   
+router.get('/detail_profile_stats', checkAuthOrigins, userController.getDetailProfileStatsData)
 
 router.post('/login_test', userController.loginUser)
 //////////////////////////////////////////////////////////////
@@ -83,13 +77,7 @@ router.get(
   userController.searchUser
 )
 router.get('/', checkUserAuth, checkAuthGuard([Roles.User]), userController.getUser)
-router.patch(
-  '/:id',
-  checkUserAuth,
-  checkAuthGuard([Roles.User]),
-  mediaUpload.single('picture'),
-  userController.updateUser
-)
+router.patch('/:id', checkUserAuth, mediaUpload.single('picture'), userController.updateUser)
 // router.delete("/:id", userController.deleteUser);
-
+  
 module.exports = router

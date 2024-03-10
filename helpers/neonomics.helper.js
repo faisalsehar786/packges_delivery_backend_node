@@ -1,6 +1,7 @@
 const axios = require("axios");
 const Sentry = require("@sentry/node");
 const logger = require("../utils/logger");
+const neonomicsErrorMiddleware = require("./neonomicsError.helper");
 
 async function createNeonomicsToken() {
   const config = {
@@ -65,13 +66,14 @@ async function createNeonomicsConsentUrl(sessionId, requestUrl, encryptSSN) {
       "x-psu-ip-address": process.env.NEONOMICS_PSU_IP_ADDRESS,
       "x-psu-id": encryptSSN || "",
       "Content-Type": "application/json",
+      "x-redirect-url": process.env.NEONOMICS_REDIRECT_URL,
     },
   };
   const bankPayload = await axios(config);
   return bankPayload?.data;
 }
 
-async function getNeonomicsAccounts(sessionId, encryptSSN) {
+async function getNeonomicsAccounts(sessionId, encryptSSN, req) {
   const accessToken = await createNeonomicsToken();
   try {
     const config = {
@@ -89,11 +91,14 @@ async function getNeonomicsAccounts(sessionId, encryptSSN) {
     const bankPayload = await axios(config);
     return bankPayload?.data;
   } catch (error) {
+    if (error?.response?.data?.id && error?.response?.data?.errorCode) {
+      neonomicsErrorMiddleware.logError(error, req.user?._id);
+    }
     return error.response.data;
   }
 }
 
-async function getNeonomicsAccountTransactions(sessionId, accountId) {
+async function getNeonomicsAccountTransactions(sessionId, accountId, req) {
   const accessToken = await createNeonomicsToken();
   try {
     const config = {
@@ -110,12 +115,16 @@ async function getNeonomicsAccountTransactions(sessionId, accountId) {
     const bankPayload = await axios(config);
     return bankPayload?.data;
   } catch (error) {
+    if (error?.response?.data?.id && error?.response?.data?.errorCode) {
+      neonomicsErrorMiddleware.logError(error, req.user?._id);
+    }
     logger.error("getNeonomicsAccountTransactionsError", error);
     Sentry.captureException(error);
   }
 }
 
 async function getNeonomicsAccountTransactionsByDateRange(
+  req,
   sessionId,
   accountId,
   startDate = new Date(),
@@ -137,12 +146,15 @@ async function getNeonomicsAccountTransactionsByDateRange(
     const bankPayload = await axios(config);
     return bankPayload?.data?.transactions || [];
   } catch (error) {
+    if (error?.response?.data?.id && error?.response?.data?.errorCode) {
+      neonomicsErrorMiddleware.logError(error, req.user?._id);
+    }
     logger.error(`getNeonomicsAccountTransactionsByDateRangeError - ${error}`);
     Sentry.captureException(error);
   }
 }
 
-async function checkSessionStatus(sessionId) {
+async function checkSessionStatus(sessionId, req) {
   const accessToken = await createNeonomicsToken();
   try {
     const config = {
@@ -157,9 +169,13 @@ async function checkSessionStatus(sessionId) {
     const sessionStatus = await axios(config);
     return sessionStatus?.data;
   } catch (error) {
+    if (error?.response?.data?.id && error?.response?.data?.errorCode) {
+      neonomicsErrorMiddleware.logError(error, req.user?._id);
+    }
     Sentry.captureException(error);
   }
 }
+
 async function getNeonomicsSingleBank(bankId) {
   const accessToken = await createNeonomicsToken();
   const config = {

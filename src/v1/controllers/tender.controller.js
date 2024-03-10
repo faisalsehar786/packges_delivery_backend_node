@@ -17,16 +17,27 @@ const {
 } = require('../../../helpers/commonApis')
 
 const createTender = async (req, res, next) => {
+
+
+ 
+   
   if (req?.files) {
     const images = req?.files?.map((item) => ({path: item?.location}))
     req.body.files = images?.length > 0 ? images : []
   }
-
-  req.body.slug = slugify(req.body.title)
-  req.body.customer_id = req.user.id
+  console.log(req?.body) 
+  // return apiResponse.ErrorResponse(
+  //   res,
+  //   'Du har ikke tilgang til å oppdatere andre brukeres data',
+  //   "You are not allowed to update other user's data"
+  // )
+  req.body.slug = slugify(req?.body?.title)
+  req.body.customer_id = req?.user?.id
   req.body.order = {
     order_no: uuidv4(),
   }
+ 
+
   try {
     const status = await createItemReturnData({
       req,
@@ -65,8 +76,8 @@ const createTender = async (req, res, next) => {
     }
   } catch (err) {
     next(err)
-  }
-}
+  } 
+}   
 
 const getTender = async (req, res, next) => {
   try {

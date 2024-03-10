@@ -13,6 +13,7 @@ const {
   getFilterOptions,
   getPaginationWithPopulate,
   getItemWithPopulate,
+  updateItemReturnData,
 } = require('../../../helpers/commonApis')
 
 const createPayment = async (req, res, next) => {
@@ -39,6 +40,20 @@ const createPayment = async (req, res, next) => {
       Model: paymentModel,
       itemName: 'Payment',
     })
+
+    if (req.body?.status == 'completed') {
+      await updateItemReturnData({
+        Model: TenderModel,
+        cond: {
+          _id: check?._id,
+        },
+        updateobject: {
+          'order.order_status': 'payment_done',
+        },
+        req,
+        res,
+      })
+    }
   } catch (err) {
     next(err)
   }
@@ -147,7 +162,7 @@ const getPayments = async (req, res, next) => {
     next(err)
   }
 }
-  
+
 const deletePayment = async (req, res, next) => {
   try {
     await softDelete({
@@ -169,6 +184,20 @@ const updatePayment = async (req, res, next) => {
       Model: paymentModel,
       itemName: 'Payment',
     })
+
+    if (req.body?.status == 'completed') {
+      await updateItemReturnData({
+        Model: TenderModel,
+        cond: {
+          _id: req.params.id,
+        },
+        updateobject: {
+          'order.order_status': 'payment_done',
+        },
+        req,
+        res,
+      })
+    }
   } catch (err) {
     next(err)
   }

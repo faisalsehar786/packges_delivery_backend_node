@@ -7,6 +7,8 @@ const tenderSchema = new mongoose.Schema(
     driver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
     title: {type: String, default: ''},
     slug: {type: String, default: ''},
+    deliver_to_details: {type: String, default: ''},
+    description: {type: String, default: ''},
     files: [
       {
         path: {type: String, default: ''},
@@ -21,7 +23,7 @@ const tenderSchema = new mongoose.Schema(
         height: {type: Number, default: 0},
         created_date: {type: Date, default: Date.now},
       },
-    ],
+    ],  
     order_awarded: [
       {
         awarded_to_driver: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
@@ -30,9 +32,9 @@ const tenderSchema = new mongoose.Schema(
           enum: ['accepted', 'cancel', 'completed'],
           default: 'accepted',
         },
-        created_date: {type: Date, default: Date.now}, 
+        created_date: {type: Date, default: Date.now},
       },
-    ], 
+    ],
     pickup_date: {type: Date, default: Date.now},
     delivery_date: {type: Date, default: Date.now},
     order: {
@@ -110,7 +112,7 @@ const tenderSchema = new mongoose.Schema(
     },
   }
 )
-tenderSchema.index({ location_from: "2dsphere" });
+tenderSchema.index({location_from: '2dsphere'})
 tenderSchema.plugin(mongooseDelete, {overrideMethods: 'all'})
 
 module.exports = mongoose.model('Tender', tenderSchema)

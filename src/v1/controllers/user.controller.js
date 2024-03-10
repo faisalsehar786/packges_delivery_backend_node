@@ -1096,7 +1096,8 @@ const deleteUser = async (req, res, next) => {
   }
 }
 
-const updateUser = async (req, res, next) => {
+const updateUser = async (req, res, next) => { 
+
   try {
     if (req?.file?.location) {
       req.body.image = req?.file?.location
