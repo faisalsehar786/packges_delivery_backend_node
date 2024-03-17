@@ -78,6 +78,6 @@ router.get(
 )
 router.get('/', checkUserAuth, checkAuthGuard([Roles.User]), userController.getUser)
 router.patch('/:id', checkUserAuth, mediaUpload.single('picture'), userController.updateUser)
-// router.delete("/:id", userController.deleteUser);
-  
+router.delete('/:id', checkAdminUserAuth, userController.deleteUser)
+
 module.exports = router

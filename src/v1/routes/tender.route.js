@@ -4,6 +4,7 @@ const router = express.Router()
 const {checkUserAuth} = require('../../../middlewares/authMiddleware')
 const mediaUpload = require('../../../middlewares/upload-aws-image')
 const {body} = require('express-validator')
+const {checkAdminUserAuth} = require('../../../middlewares/authMiddlewareAdminPanel')
 router.get('/get_all', checkUserAuth, tenderController.getTenders)
 router.get('/details/:id', tenderController.getTender)
 router.post(
@@ -31,5 +32,5 @@ router.patch(
   checkUserAuth,
   tenderController.updateTender
 )
-
+router.get('/admin_get_all', checkUserAuth, tenderController.getTendersAdmin)
 module.exports = router

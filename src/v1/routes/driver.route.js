@@ -27,4 +27,5 @@ router.post(
   driverController.createDriverReuest
 )
 
+router.get('/get_driver_tenders', checkUserAuth, driverController.getdriverTenders)
 module.exports = router

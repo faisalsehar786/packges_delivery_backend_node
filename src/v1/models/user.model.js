@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema(
         default: [0, 0],
       },
     },
-    user_type: {type: Array, default: [{role: 'customer'}, {role: 'driver'}]},
+    user_type: {type: Array, default: [{role: 'customer'}]},
     push_token: {type: String},
     ip_address: {type: String, default: ''},
     access_token: {type: String, default: ''},
@@ -83,11 +83,9 @@ userSchema.methods.checkPassword = (password, passwordHash) => {
   })
 }
 
-
-
 userSchema.virtual('fullName').get(() => `${this.firstName} ${this.lastName}`)
 
-userSchema.index({ current_location: "2d" });
+userSchema.index({current_location: '2d'})
 userSchema.plugin(mongooseDelete, {overrideMethods: 'all'})
 
 module.exports = mongoose.model('User', userSchema)

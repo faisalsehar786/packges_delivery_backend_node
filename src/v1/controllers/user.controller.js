@@ -12,7 +12,13 @@ const OrganisationUserPasswordResetModel = require('../models/organisationUserPa
 const UserModel = require('../models/user.model')
 const vippsHelper = require('../../../helpers/vipps.helper')
 const {sendEmail} = require('../../../helpers/emailSender')
-const {getPagination, softDelete, totalItems, hashPassord} = require('../../../helpers/commonApis')
+const {
+  getPagination,
+  softDelete,
+  totalItems,
+  hashPassord,
+  getFilterOptions,
+} = require('../../../helpers/commonApis')
 const notification = require('../models/notification.model')
 const randomNumber = require('../../../utils/randomNumber')
 const TenderModel = require('../models/tender.model')
@@ -1065,17 +1071,35 @@ const getDetailProfile = async (req, res, next) => {
 }
 
 const getUsers = async (req, res, next) => {
+  const term = req?.query?.search ? req?.query?.search : ''
+  const role = req?.query?.role ? req?.query?.role : 'all'
+  const filter = getFilterOptions(req)
+  let andCod = []
+  let orCod = []
+
+  if (term) {
+    orCod.push(
+      {first_name: {$regex: term, $options: 'i'}},
+      {last_name: {$regex: term, $options: 'i'}},
+      {mobile_number: {$regex: term, $options: 'i'}},
+      {email: {$regex: term, $options: 'i'}}
+    )
+  }
+  if (role != 'all' && role) {
+    andCod.push({'user_type.role': role})
+  }
+
+  console.log(andCod)
+
   try {
-    const term = req.query.search
     return await getPagination({
       req,
       res,
       model: UserModel,
       findOptions: {
-        $or: [
-          {firstName: {$regex: term, $options: 'i'}},
-          {lastName: {$regex: term, $options: 'i'}},
-        ],
+        $and: andCod.length > 0 ? andCod : [{}],
+        $or: orCod.length > 0 ? orCod : [{}],
+        ...filter,
       },
     })
   } catch (err) {
@@ -1096,8 +1120,7 @@ const deleteUser = async (req, res, next) => {
   }
 }
 
-const updateUser = async (req, res, next) => { 
-
+const updateUser = async (req, res, next) => {
   try {
     if (req?.file?.location) {
       req.body.image = req?.file?.location
@@ -2188,11 +2211,11 @@ const getDetailProfileStatsData = async (req, res, next) => {
   return apiResponse.successResponseWithData(
     res,
     'Brukerdetaljene ble hentet',
-    'User detail fetched successfully',  
+    'User detail fetched successfully',
     {
       customer_stats: userDetail1?.length > 0 ? userDetail1[0] : null,
       driver_stats: userDetail2?.length > 0 ? userDetail2[0] : null,
-      user:req?.user
+      user: req?.user,
     }
   )
 }

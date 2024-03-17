@@ -17,15 +17,11 @@ const {
 } = require('../../../helpers/commonApis')
 
 const createTender = async (req, res, next) => {
-
-
- 
-   
   if (req?.files) {
     const images = req?.files?.map((item) => ({path: item?.location}))
     req.body.files = images?.length > 0 ? images : []
   }
-  console.log(req?.body) 
+  console.log(req?.body)
   // return apiResponse.ErrorResponse(
   //   res,
   //   'Du har ikke tilgang til å oppdatere andre brukeres data',
@@ -36,7 +32,6 @@ const createTender = async (req, res, next) => {
   req.body.order = {
     order_no: uuidv4(),
   }
- 
 
   try {
     const status = await createItemReturnData({
@@ -76,8 +71,8 @@ const createTender = async (req, res, next) => {
     }
   } catch (err) {
     next(err)
-  } 
-}   
+  }
+}
 
 const getTender = async (req, res, next) => {
   try {
@@ -211,10 +206,74 @@ const getTenders = async (req, res, next) => {
   }
 }
 
+const getTendersAdmin = async (req, res, next) => {
+  try {
+    const term = req?.query?.search ? req?.query?.search : ''
+    const status = req?.query?.status ? req?.query?.status : 'all'
+    const order_status = req?.query?.order_status ? req?.query?.order_status : 'all'
+    const filter = getFilterOptions(req)
+
+    let andCod = []
+    let orCod = []
+
+    if (term) {
+      orCod.push(
+        {title: {$regex: term, $options: 'i'}},
+        {'order.order_no': {$regex: term, $options: 'i'}}
+      )
+    }
+    if (status != 'all' && status) {
+      andCod.push({tender_status: status})
+    }
+    if (order_status != 'all' && order_status) {
+      andCod.push({'order.order_status': order_status})
+    }
+
+    return await getPaginationWithPopulate({
+      req,
+      res,
+      model: TenderModel,
+      findOptions: {
+        $and: andCod.length > 0 ? andCod : [{}],
+        $or: orCod.length > 0 ? orCod : [{}],
+        ...filter,
+      },
+
+      populateObject: [
+        {
+          path: 'customer_id',
+          select: {
+            first_name: 1,
+            last_name: 1,
+            email: 1,
+            mobile_number: 1,
+            current_location: 1,
+            image: 1,
+          },
+        },
+        {
+          path: 'driver_id',
+          select: {
+            first_name: 1,
+            last_name: 1,
+            email: 1,
+            mobile_number: 1,
+            current_location: 1,
+            image: 1,
+          },
+        },
+      ],
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
 module.exports = {
   createTender,
   getTender,
   getTenders,
   deleteTender,
   updateTender,
+  getTendersAdmin,
 }
