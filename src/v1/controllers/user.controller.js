@@ -129,7 +129,7 @@ const loginVippsUserInfo = async (req, res, next) => {
 
 const getUser = async (req, res, next) => {
   try {
-    const userId = req.user.id
+    const userId = req.params.id
 
     const user = await UserModel.findById(userId).select('-password')
     if (!user) {
@@ -1128,13 +1128,13 @@ const updateUser = async (req, res, next) => {
     if (req.body.password) {
       req.body.password = await hashPassord({password: req.body.password})
     }
-    if (req.user.id !== req.params.id) {
-      return apiResponse.ErrorResponse(
-        res,
-        'Du har ikke tilgang til å oppdatere andre brukeres data',
-        "You are not allowed to update other user's data"
-      )
-    }
+    // if (req.user.id !== req.params.id) {
+    //   return apiResponse.ErrorResponse(
+    //     res,
+    //     'Du har ikke tilgang til å oppdatere andre brukeres data',
+    //     "You are not allowed to update other user's data"
+    //   )
+    // }
     if (req.body.email) {
       delete req.body.email
     }

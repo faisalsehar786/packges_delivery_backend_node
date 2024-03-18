@@ -49,6 +49,7 @@ const loginAdmin = async (req, res, next) => {
         'Invalid Credentials'
       )
     }
+
     const otp = generateOTP()
     const loginOtpDoc = await AdminLoginOtpModel.create({
       user_id: user?.id,
@@ -1028,8 +1029,12 @@ const getAppUsersStats = async (req, res, next) => {
         },
       },
     ]
+
+    const constDriver = await userModel.count({'user_type.role': 'driver'})
+
     const userDetail = await userModel.aggregate(aggregateCondition)
 
+    userDetail?.length > 0 ? (userDetail[0].user_type_driver_count = constDriver) : null
     return apiResponse.successResponseWithData(
       res,
       'Brukerdetaljene ble hentet',

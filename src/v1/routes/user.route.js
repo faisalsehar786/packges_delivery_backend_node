@@ -69,14 +69,14 @@ router.post(
 //////////////////////////////////////////////////////////////////////
 
 router.get('/refresh_token', userController.refreshTokenUser)
-router.get('/logout', checkUserAuth, checkAuthGuard([Roles.User]), userController.logout)
+router.get('/logout', checkUserAuth, userController.logout)
 router.get(
   '/search',
   checkAdminUserAuth,
   checkAuthGuard([Roles.Admin, Roles.Manager]),
   userController.searchUser
 )
-router.get('/', checkUserAuth, checkAuthGuard([Roles.User]), userController.getUser)
+router.get('/:id', checkUserAuth, userController.getUser)
 router.patch('/:id', checkUserAuth, mediaUpload.single('picture'), userController.updateUser)
 router.delete('/:id', checkAdminUserAuth, userController.deleteUser)
 
