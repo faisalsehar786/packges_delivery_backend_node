@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const {ObjectId} = require('mongodb')
+const { ObjectId } = require('mongodb')
 const notification = require('../models/notification.model')
 const apiResponse = require('../../../helpers/apiResponse')
 const {
@@ -96,7 +96,7 @@ const getnotificationSender = async (req, res, next) => {
           read: req.query.read,
         }
       : {}
-    const senderId = req.query.sender_id ? {sender_id: req.query.sender_id} : {}
+    const senderId = req.query.sender_id ? { sender_id: req.query.sender_id } : {}
     const term = req.query.search
     const filter = getFilterOptions(req)
     return await getPaginationWithPopulate({
@@ -145,7 +145,7 @@ const getnotificationReceiver = async (req, res, next) => {
           read: req.query.read,
         }
       : {}
-    const receiver_id = req.query.receiver_id ? {receiver_id: req.query.receiver_id} : {}
+    const receiver_id = req.query.receiver_id ? { receiver_id: req.query.receiver_id } : {}
     const filter = getFilterOptions(req)
     return await getPaginationWithPopulate({
       req,
@@ -213,7 +213,7 @@ const getOneSignalNotification = async (req, res, next) => {
       res,
       model: notification,
       findOptions: {
-        $and: [{receiver_id: fetchId}, noti_type, read],
+        $and: [{ receiver_id: fetchId }, noti_type, read],
         ...filter,
       },
       populateObject: [
@@ -241,34 +241,33 @@ const getOneSignalNotification = async (req, res, next) => {
     next(err)
   }
 }
-  
+
 const notificationMarkAsRead = async (req, res, next) => {
   try {
     const fetchId = req.user.id
     await notification.updateMany(
-      {receiver_id: new ObjectId(fetchId)},
+      { receiver_id: new ObjectId(fetchId) },
       {
-        $set: {read: true},
+        $set: { read: true },
       }
     )
-  
+
     return apiResponse.successResponseWithData(res, 'Operasjonssuksess', 'Operation success')
   } catch (err) {
     next(err)
   }
 }
 
-
 const totalnotificationUnRead = async (req, res, next) => {
   try {
     const fetchId = req.user.id
     const totalItems = await notification
       .count({
-        $and: [{user_id: new ObjectId(fetchId)}, {read: false}],
+        $and: [{ receiver_id: new ObjectId(fetchId) }, { read: false }],
       })
       .exec()
 
-    return res.status(200).json({success: true, unread_notifications_count: totalItems})
+    return res.status(200).json({ success: true, unread_notifications_count: totalItems })
   } catch (err) {
     next(err)
   }
@@ -283,4 +282,4 @@ module.exports = {
   getOneSignalNotification,
   notificationMarkAsRead,
   totalnotificationUnRead,
-}  
+}

@@ -1,8 +1,8 @@
 const paymentModel = require('../models/payment.model')
 const TenderModel = require('../models/tender.model')
-const {slugify} = require('../../../utils/customfunctions')
+const { slugify } = require('../../../utils/customfunctions')
 const apiResponse = require('../../../helpers/apiResponse')
-const {v1: uuidv1, v4: uuidv4} = require('uuid')
+const { v1: uuidv1, v4: uuidv4 } = require('uuid')
 const {
   getPagination,
   getItem,
@@ -17,7 +17,7 @@ const {
 } = require('../../../helpers/commonApis')
 
 const createPayment = async (req, res, next) => {
-  const check = await TenderModel.findOne({_id: req?.body?.tender_id})
+  const check = await TenderModel.findOne({ _id: req?.body?.tender_id })
 
   if (!check) {
     return apiResponse.notFoundResponse(
@@ -63,7 +63,7 @@ const getPayment = async (req, res, next) => {
   try {
     const itemId = req.params.id
     getItemWithPopulate({
-      query: {_id: itemId},
+      query: { _id: itemId },
       Model: paymentModel,
       populateObject: [
         {
@@ -90,14 +90,6 @@ const getPayment = async (req, res, next) => {
         },
         {
           path: 'tender_id',
-          select: {
-            first_name: 1,
-            last_name: 1,
-            email: 1,
-            mobile_number: 1,
-            current_location: 1,
-            image: 1,
-          },
         },
       ],
       res,
@@ -115,10 +107,10 @@ const getPayments = async (req, res, next) => {
     let andCod = []
     let orCod = []
     if (order_no) {
-      andCod.push({order_no: order_no})
+      andCod.push({ order_no: order_no })
     }
     if (status != 'all' && status) {
-      andCod.push({status: status})
+      andCod.push({ status: status })
     }
 
     return await getPaginationWithPopulate({
@@ -205,13 +197,13 @@ const updatePayment = async (req, res, next) => {
 
 const checkPaymentStatusofOrder = async (req, res, next) => {
   try {
-    const {order_no, customer_id} = req?.query
-    let andCod = [{status: 'completed'}]
+    const { order_no, customer_id } = req?.query
+    let andCod = [{ status: 'completed' }]
     if (order_no) {
-      andCod.push({order_no: order_no})
+      andCod.push({ order_no: order_no })
     }
     if (customer_id) {
-      andCod.push({customer_id: customer_id})
+      andCod.push({ customer_id: customer_id })
     }
 
     const findOptions = {

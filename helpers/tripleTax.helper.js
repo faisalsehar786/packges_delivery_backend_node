@@ -1,15 +1,15 @@
-const axios = require("axios");
-const moment = require("moment");
-const Sentry = require("@sentry/node");
+const axios = require('axios')
+const moment = require('moment')
+const Sentry = require('@sentry/node')
 
 async function createCustomer(organisation) {
   try {
     const config = {
-      method: "post",
+      method: 'post',
       url: `${process.env.TRIPLE_TAX_BASE_URL}/customer`,
       headers: {
         Authorization: `Basic ${process.env.TRIPLE_TAX_AUTHORIZATION_CODE}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       data: {
         name: organisation.org_name, // org name
@@ -24,13 +24,13 @@ async function createCustomer(organisation) {
         overdueNoticeEmail: organisation.email, // this is user email
         phoneNumber: organisation.mobile_phone, // NIF mobile_number
         phoneNumberMobile: organisation.phone_no, // MSN Modal phone_no
-        description: "Stotte Organisation",
-        language: "NO",
+        description: 'HYhm Organisation',
+        language: 'NO',
         displayName: organisation.org_name,
         isPrivateIndividual: false,
         singleCustomerInvoice: false,
-        invoiceSendMethod: "EMAIL", // we might change that to EHF @saif
-        emailAttachmentType: "LINK",
+        invoiceSendMethod: 'EMAIL', // we might change that to EHF @saif
+        emailAttachmentType: 'LINK',
         postalAddress: {
           id: 0,
           addressLine1: organisation.address_line1,
@@ -62,46 +62,45 @@ async function createCustomer(organisation) {
           },
         },
         invoicesDueIn: 14,
-        invoicesDueInType: "DAYS",
+        invoicesDueInType: 'DAYS',
         currency: {
           id: 1,
         },
       },
-    };
-    const userInfoPayload = await axios(config);
-    return userInfoPayload?.data;
+    }
+    const userInfoPayload = await axios(config)
+    return userInfoPayload?.data
   } catch (error) {
-    Sentry.captureException(error);
+    Sentry.captureException(error)
   }
 }
 
 async function createOrder(organisation, amount, vatamt) {
   try {
-    const uuid = moment().format("DDMMYYHHMM");
+    const uuid = moment().format('DDMMYYHHMM')
     const config = {
-      method: "post",
+      method: 'post',
       url: `${process.env.TRIPLE_TAX_BASE_URL}/order`,
       headers: {
         Authorization: `Basic ${process.env.TRIPLE_TAX_AUTHORIZATION_CODE}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       data: {
         customer: {
           id: organisation.triple_tax_id,
         },
-        deliveryDate: moment().add(14, "days").format("YYYY-MM-DD"),
-        orderDate: moment().format("YYYY-MM-DD"),
+        deliveryDate: moment().add(14, 'days').format('YYYY-MM-DD'),
+        orderDate: moment().format('YYYY-MM-DD'),
         receiverEmail: organisation.email,
         overdueNoticeEmail: organisation.email,
         number: uuid,
         reference: uuid,
-        invoiceComment:
-        `Total Støtte mottatt forrige måned: NOK ${amount}`,
+        invoiceComment: `Total Støtte mottatt forrige måned: NOK ${amount}`,
         currency: {
           id: 1,
         },
         invoicesDueIn: 14,
-        invoicesDueInType: "DAYS",
+        invoicesDueInType: 'DAYS',
         isShowOpenPostsOnInvoices: false,
         isClosed: false,
         deliveryAddress: {
@@ -114,9 +113,9 @@ async function createOrder(organisation, amount, vatamt) {
             id: 161,
           },
         },
-        deliveryComment: "Delivery comments",
+        deliveryComment: 'Delivery comments',
         isPrioritizeAmountsIncludingVat: true,
-        orderLineSorting: "PRODUCT",
+        orderLineSorting: 'PRODUCT',
         orderLines: [
           {
             id: 0,
@@ -136,29 +135,29 @@ async function createOrder(organisation, amount, vatamt) {
           },
         ],
         isSubscription: false,
-        sendMethodDescription: "EMAIL",
+        sendMethodDescription: 'EMAIL',
         invoiceOnAccountVatHigh: false,
       },
-    };
-    const userInfoPayload = await axios(config);
-    return userInfoPayload?.data;
+    }
+    const userInfoPayload = await axios(config)
+    return userInfoPayload?.data
   } catch (error) {
-    Sentry.captureException(error);
+    Sentry.captureException(error)
   }
 }
 
 async function createInvoice(order_id, triple_tax_id, paidAmount) {
   try {
     const config = {
-      method: "post",
+      method: 'post',
       url: `${process.env.TRIPLE_TAX_BASE_URL}/invoice?sendToCustomer=true&paidAmount=${paidAmount}`,
       headers: {
         Authorization: `Basic ${process.env.TRIPLE_TAX_AUTHORIZATION_CODE}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       data: {
-        invoiceDate: moment().format("YYYY-MM-DD"), // This must be todays date
-        invoiceDueDate: moment().add(14, "days").format("YYYY-MM-DD"), // This must be 14 days from the creation of the date.
+        invoiceDate: moment().format('YYYY-MM-DD'), // This must be todays date
+        invoiceDueDate: moment().add(14, 'days').format('YYYY-MM-DD'), // This must be 14 days from the creation of the date.
         orders: [
           {
             id: order_id, // This is the order ID
@@ -167,18 +166,18 @@ async function createInvoice(order_id, triple_tax_id, paidAmount) {
         customer: {
           id: triple_tax_id,
         },
-        // comment: `Total stotte mottatt: ${totalAmount} - Total platform kost (12%): ${paidAmount} - Netto stotte utbetalt: ${netAmount}`,
+        // comment: `Total HYhm mottatt: ${totalAmount} - Total platform kost (12%): ${paidAmount} - Netto HYhm utbetalt: ${netAmount}`,
         comment: ``,
         currency: {
           id: 1,
         },
-        invoiceRemarks: "invoice remarks",
+        invoiceRemarks: 'invoice remarks',
       },
-    };
-    const userInfoPayload = await axios(config);
-    return userInfoPayload?.data;
+    }
+    const userInfoPayload = await axios(config)
+    return userInfoPayload?.data
   } catch (error) {
-    Sentry.captureException(error);
+    Sentry.captureException(error)
   }
 }
 
@@ -186,4 +185,4 @@ module.exports = {
   createCustomer,
   createOrder,
   createInvoice,
-};
+}

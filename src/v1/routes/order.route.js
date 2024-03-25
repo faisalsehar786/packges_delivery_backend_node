@@ -1,9 +1,9 @@
 const express = require('express')
 const orderController = require('../controllers/order.controller')
 const router = express.Router()
-const {checkUserAuth} = require('../../../middlewares/authMiddleware')
+const { checkUserAuth } = require('../../../middlewares/authMiddleware')
 const mediaUpload = require('../../../middlewares/upload-aws-image')
-const {body} = require('express-validator')
+const { body } = require('express-validator')
 
 router.get(
   '/track_order_by_id_order_no_or_with_payment_details',
@@ -15,4 +15,3 @@ router.patch('/update_location_by_order_no/:id', checkUserAuth, orderController.
 router.patch('/cancel_order_by_order_no/:id', checkUserAuth, orderController.cancelOrderByNo)
 router.patch('/complete_order_by_order_no/:id', checkUserAuth, orderController.completeOrderByNo)
 module.exports = router
-    

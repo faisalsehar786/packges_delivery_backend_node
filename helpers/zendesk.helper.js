@@ -1,12 +1,12 @@
-const axios = require("axios");
+const axios = require('axios')
 
 async function createTicket(subject, body, name, email) {
   const config = {
-    method: "post",
+    method: 'post',
     url: `${process.env.ZENDESK_BASE_URL}/requests.json`,
     headers: {
       Authorization: `${process.env.ZENDESK_AUTHORIZATION_CODE}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     data: {
       request: {
@@ -20,11 +20,11 @@ async function createTicket(subject, body, name, email) {
         },
       },
     },
-  };
-  const userInfoPayload = await axios(config);
-  return userInfoPayload?.data;
+  }
+  const userInfoPayload = await axios(config)
+  return userInfoPayload?.data
 }
 
 module.exports = {
   createTicket,
-};
+}

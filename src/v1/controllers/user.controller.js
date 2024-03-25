@@ -1,17 +1,17 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-restricted-syntax */
 const mongoose = require('mongoose')
-const {ObjectId} = require('mongodb')
+const { ObjectId } = require('mongodb')
 const bcrypt = require('bcrypt')
 const _ = require('lodash')
 const moment = require('moment')
 const apiResponse = require('../../../helpers/apiResponse')
-const {validationResult} = require('express-validator')
-const {generateToken, verifyToken} = require('../../../middlewares/authMiddleware')
+const { validationResult } = require('express-validator')
+const { generateToken, verifyToken } = require('../../../middlewares/authMiddleware')
 const OrganisationUserPasswordResetModel = require('../models/organisationUserPasswordReset.model')
 const UserModel = require('../models/user.model')
 const vippsHelper = require('../../../helpers/vipps.helper')
-const {sendEmail} = require('../../../helpers/emailSender')
+const { sendEmail } = require('../../../helpers/emailSender')
 const {
   getPagination,
   softDelete,
@@ -23,7 +23,7 @@ const notification = require('../models/notification.model')
 const randomNumber = require('../../../utils/randomNumber')
 const TenderModel = require('../models/tender.model')
 const OrganisationLoginOtpModel = require('../models/organisationLoginOtp.model')
-const {generateOTP} = require('../../../helpers/otpVerification')
+const { generateOTP } = require('../../../helpers/otpVerification')
 
 const loginVippsAuthUri = async (req, res, next) => {
   try {
@@ -82,14 +82,14 @@ const loginVippsUserInfo = async (req, res, next) => {
 
     // Generate JWT Access Token
     const token = await generateToken(
-      {id: user.id, user_type: '', role: 'app'},
+      { id: user.id, user_type: '', role: 'app' },
       process.env.JWT_SECRET_KEY,
       process.env.JWT_AUTH_TOKEN_EXPIRE
     )
 
     // Generate JWT Refresh Token
     const refreshToken = await generateToken(
-      {id: user.id, user_type: '', role: 'app'},
+      { id: user.id, user_type: '', role: 'app' },
       process.env.JWT_SECRET_KEY_REFRESH_TOKEN,
       process.env.JWT_REFRESH_TOKEN_EXPIRE
     )
@@ -163,913 +163,6 @@ const getUser = async (req, res, next) => {
   }
 }
 
-const getDetailProfileDriver = async (req, res, next) => {
-  try {
-    const userId = req?.params?.id
-
-    if (!userId) {
-      return apiResponse.validationErrorWithData(
-        res,
-        'Beklager, det oppstod en valideringsfeil.',
-        'Validation Error',
-        'Invalid Data'
-      )
-    }
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return apiResponse.validationErrorWithData(
-        res,
-        'Beklager, det oppstod en valideringsfeil.',
-        'Validation Error',
-        'Invalid Data'
-      )
-    }
-
-    const aggregateCondition = [
-      {
-        $match:
-          /**
-           * query: The query in MQL.
-           */
-          {
-            $or: [
-              {
-                'order_awarded.awarded_to_driver': new ObjectId(userId),
-              },
-              {
-                driver_id: new ObjectId(userId),
-              },
-            ],
-          },
-      },
-      {
-        $addFields:
-          /**
-           * newField: The new field name.
-           * expression: The new field expression.
-           */
-          {
-            driver_order_completed: {
-              $size: {
-                $filter: {
-                  input: '$order_awarded',
-                  as: 'orderAwarded',
-                  cond: {
-                    $and: [
-                      {
-                        $eq: ['$$orderAwarded.order_awarded_status', 'completed'],
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-            driver_order_cancel: {
-              $size: {
-                $filter: {
-                  input: '$order_awarded',
-                  as: 'orderAwarded',
-                  cond: {
-                    $and: [
-                      {
-                        $eq: ['$$orderAwarded.order_awarded_status', 'cancel'],
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-            driver_order_accepted: {
-              $size: {
-                $filter: {
-                  input: '$order_awarded',
-                  as: 'orderAwarded',
-                  cond: {
-                    $and: [
-                      {
-                        $eq: ['$$orderAwarded.order_awarded_status', 'accepted'],
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-          },
-      },
-      {
-        $lookup:
-          /**
-           * from: The target collection.
-           * localField: The local join field.
-           * foreignField: The target join field.
-           * as: The name for the results.
-           * pipeline: Optional pipeline to run on the foreign collection.
-           * let: Optional variables to use in the pipeline field stages.
-           */
-          {
-            from: 'payments',
-            localField: 'driver_id',
-            foreignField: 'driver_id',
-            as: 'driver_payments',
-          },
-      },
-      {
-        $addFields:
-          /**
-           * newField: The new field name.
-           * expression: The new field expression.
-           */
-          {
-            driver_total_earning_array: {
-              $filter: {
-                input: '$driver_payments',
-                as: 'payment',
-                cond: {
-                  $and: [
-                    {
-                      $eq: ['$$payment.status', 'completed'],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-      },
-      {
-        $addFields:
-          /**
-           * newField: The new field name.
-           * expression: The new field expression.
-           */
-          {
-            driver_total_earning: {
-              $sum: '$driver_total_earning_array.driver_share_amount',
-            },
-          },
-      },
-      {
-        $group: {
-          _id: 'stats',
-          total: {
-            $sum: 1,
-          },
-          tender_published: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$tender_status', 'published'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          tender_accepted: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$tender_status', 'accepted'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_awaiting_for_payment: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'awaiting_for_payment'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_payment_done: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'payment_done'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_processing: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'processing'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_on_the_way: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'on_the_way'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_completed: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'completed'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_cancel: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'cancel'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          driver_order_completed: {
-            $sum: '$driver_order_completed',
-          },
-          driver_order_cancel: {
-            $sum: '$driver_order_cancel',
-          },
-          driver_order_accepted: {
-            $sum: '$driver_order_accepted',
-          },
-          driver_total_earning: {
-            $first: '$driver_total_earning',
-          },
-        },
-      },
-    ]
-    const userDetail = await TenderModel.aggregate(aggregateCondition)
-
-    return apiResponse.successResponseWithData(
-      res,
-      'Brukerdetaljene ble hentet',
-      'User detail fetched successfully',
-      userDetail?.length > 0 ? userDetail[0] : null
-    )
-  } catch (err) {
-    next(err)
-  }
-}
-
-const getDetailProfileCustomer = async (req, res, next) => {
-  try {
-    const userId = req?.params?.id
-    if (!userId) {
-      return apiResponse.validationErrorWithData(
-        res,
-        'Beklager, det oppstod en valideringsfeil.',
-        'Validation Error',
-        'Invalid Data'
-      )
-    }
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return apiResponse.validationErrorWithData(
-        res,
-        'Beklager, det oppstod en valideringsfeil.',
-        'Validation Error',
-        'Invalid Data'
-      )
-    }
-    const aggregateCondition = [
-      {
-        $match:
-          /**
-           * query: The query in MQL.
-           */
-          {
-            $or: [
-              // {
-              //   'order_awarded.awarded_to_driver': new ObjectId(userId),
-              // },
-              {
-                customer_id: new ObjectId(userId),
-              },
-            ],
-          },
-      },
-      {
-        $addFields:
-          /**
-           * newField: The new field name.
-           * expression: The new field expression.
-           */
-          {
-            driver_order_completed: {
-              $size: {
-                $filter: {
-                  input: '$order_awarded',
-                  as: 'orderAwarded',
-                  cond: {
-                    $and: [
-                      {
-                        $eq: ['$$orderAwarded.order_awarded_status', 'completed'],
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-            driver_order_cancel: {
-              $size: {
-                $filter: {
-                  input: '$order_awarded',
-                  as: 'orderAwarded',
-                  cond: {
-                    $and: [
-                      {
-                        $eq: ['$$orderAwarded.order_awarded_status', 'cancel'],
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-            driver_order_accepted: {
-              $size: {
-                $filter: {
-                  input: '$order_awarded',
-                  as: 'orderAwarded',
-                  cond: {
-                    $and: [
-                      {
-                        $eq: ['$$orderAwarded.order_awarded_status', 'accepted'],
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-          },
-      },
-      {
-        $lookup:
-          /**
-           * from: The target collection.
-           * localField: The local join field.
-           * foreignField: The target join field.
-           * as: The name for the results.
-           * pipeline: Optional pipeline to run on the foreign collection.
-           * let: Optional variables to use in the pipeline field stages.
-           */
-          {
-            from: 'payments',
-            localField: 'driver_id',
-            foreignField: 'driver_id',
-            as: 'driver_payments',
-          },
-      },
-      {
-        $addFields:
-          /**
-           * newField: The new field name.
-           * expression: The new field expression.
-           */
-          {
-            driver_total_earning_array: {
-              $filter: {
-                input: '$driver_payments',
-                as: 'payment',
-                cond: {
-                  $and: [
-                    {
-                      $eq: ['$$payment.status', 'completed'],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-      },
-      {
-        $addFields:
-          /**
-           * newField: The new field name.
-           * expression: The new field expression.
-           */
-          {
-            driver_total_earning: {
-              $sum: '$driver_total_earning_array.driver_share_amount',
-            },
-          },
-      },
-      {
-        $group: {
-          _id: 'stats',
-          total: {
-            $sum: 1,
-          },
-          tender_published: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$tender_status', 'published'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          tender_accepted: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$tender_status', 'accepted'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_awaiting_for_payment: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'awaiting_for_payment'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_payment_done: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'payment_done'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_processing: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'processing'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_on_the_way: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'on_the_way'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_completed: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'completed'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-          order_cancel: {
-            $sum: {
-              $cond: [
-                {
-                  $eq: ['$order.order_status', 'cancel'],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-        },
-      },
-    ]
-    const userDetail = await TenderModel.aggregate(aggregateCondition)
-
-    return apiResponse.successResponseWithData(
-      res,
-      'Brukerdetaljene ble hentet',
-      'User detail fetched successfully',
-      userDetail?.length > 0 ? userDetail[0] : null
-    )
-  } catch (err) {
-    next(err)
-  }
-}
-
-const getDetailProfile = async (req, res, next) => {
-  try {
-    const userId = req.params.id
-    if (!userId) {
-      return apiResponse.validationErrorWithData(
-        res,
-        'Beklager, det oppstod en valideringsfeil.',
-        'Validation Error',
-        'Invalid Data'
-      )
-    }
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return apiResponse.validationErrorWithData(
-        res,
-        'Beklager, det oppstod en valideringsfeil.',
-        'Validation Error',
-        'Invalid Data'
-      )
-    }
-    const aggregateCondition = [
-      {
-        $match: {
-          _id: new ObjectId(userId),
-        },
-      },
-      {
-        $lookup: {
-          from: 'notifications',
-          localField: '_id',
-          foreignField: 'user_id',
-          as: 'notifications_list',
-        },
-      },
-      {
-        $lookup: {
-          from: 'goalsupports',
-          localField: '_id',
-          foreignField: 'user_id',
-          as: 'goal_support_list',
-        },
-      },
-      {
-        $lookup: {
-          from: 'paymenttransfers',
-          localField: '_id',
-          foreignField: 'user_id',
-          as: 'payment_list',
-        },
-      },
-      {
-        $lookup: {
-          from: 'pendingpayments',
-          localField: '_id',
-          foreignField: 'user_id',
-          as: 'all_pending_payment_list',
-        },
-      },
-      {
-        $addFields: {
-          total_amount: {
-            $sum: '$payment_list.amount',
-          },
-          pending_payment_list: {
-            $filter: {
-              input: '$all_pending_payment_list',
-              as: 'data',
-              cond: {
-                $eq: ['$$data.status', 'pending'],
-              },
-            },
-          },
-          active_goal_support_count: {
-            $size: {
-              $filter: {
-                input: '$goal_support_list',
-                as: 'data',
-                cond: {
-                  $eq: ['$$data.status', 'active'],
-                },
-              },
-            },
-          },
-          unread_notifications_count: {
-            $size: {
-              $filter: {
-                input: '$notifications_list',
-                as: 'data',
-                cond: {
-                  $eq: ['$$data.read', false],
-                },
-              },
-            },
-          },
-          stopped_goal_support_count: {
-            $size: {
-              $filter: {
-                input: '$goal_support_list',
-                as: 'data',
-                cond: {
-                  $and: [
-                    {
-                      $eq: ['$$data.status', 'completed'],
-                    },
-                    {
-                      $eq: ['$$data.status', 'canceled'],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-          paused_goal_support_count: {
-            $size: {
-              $filter: {
-                input: '$goal_support_list',
-                as: 'data',
-                cond: {
-                  $eq: ['$$data.status', 'paused'],
-                },
-              },
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          pending_total_amount: {
-            $sum: '$pending_payment_list.amount',
-          },
-        },
-      },
-      {
-        $unwind: {
-          path: '$goal_support_list',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'goalsupports',
-          localField: 'goal_support_list.goal_id',
-          foreignField: 'goal_id',
-          as: 'goal_support_list.goal_supports',
-        },
-      },
-      {
-        $lookup: {
-          from: 'goals',
-          localField: 'goal_support_list.goal_id',
-          foreignField: '_id',
-          as: 'goal_support_list.goal_detail',
-        },
-      },
-      {
-        $unwind: {
-          path: '$goal_support_list.goal_detail',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'paymenttransfers',
-          localField: 'goal_support_list.goal_id',
-          foreignField: 'goal_id',
-          as: 'goal_support_list.payment_list',
-        },
-      },
-      {
-        $lookup: {
-          from: 'organisations',
-          localField: 'goal_support_list.organisation_id',
-          foreignField: '_id',
-          as: 'goal_support_list.organisation_details',
-        },
-      },
-      {
-        $unwind: {
-          path: '$goal_support_list.organisation_details',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'pendingpayments',
-          localField: 'goal_support_list._id',
-          foreignField: 'goal_support_id',
-          as: 'goal_support_list.all_pending_payment_list',
-        },
-      },
-      {
-        $lookup: {
-          from: 'organisationsports',
-          localField: 'goal_support_list.organisation_sports_category_id',
-          foreignField: '_id',
-          as: 'goal_support_list.sport_details',
-        },
-      },
-      {
-        $unwind: {
-          path: '$goal_support_list.sport_details',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $addFields: {
-          'goal_support_list.sports_category_name':
-            '$goal_support_list.sport_details.sports_category_name',
-          'goal_support_list.user_payment_list': {
-            $filter: {
-              input: '$goal_support_list.payment_list',
-              as: 'data',
-              cond: {
-                $eq: ['$$data.user_id', new ObjectId(userId)],
-              },
-            },
-          },
-          'goal_support_list.active_goal_support': {
-            $filter: {
-              input: '$goal_support_list.goal_supports',
-              as: 'data',
-              cond: {
-                $eq: ['$$data.status', 'active'],
-              },
-            },
-          },
-          'goal_support_list.pending_payment_list': {
-            $filter: {
-              input: '$goal_support_list.all_pending_payment_list',
-              as: 'data',
-              cond: {
-                $eq: ['$$data.status', 'pending'],
-              },
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          'goal_support_list.total_amount': {
-            $sum: '$goal_support_list.payment_list.amount',
-          },
-          'goal_support_list.user_total_amount': {
-            $sum: '$goal_support_list.user_payment_list.amount',
-          },
-          'goal_support_list.pending_amount': {
-            $sum: '$goal_support_list.pending_payment_list.amount',
-          },
-          'goal_support_list.active_goal_support_user_count': {
-            $size: {
-              $reduce: {
-                input: '$goal_support_list.active_goal_support',
-                initialValue: [],
-                in: {
-                  $setUnion: ['$$value', ['$$this.user_id']],
-                },
-              },
-            },
-          },
-          'goal_support_list.goal_title': '$goal_support_list.goal_detail.title',
-          'goal_support_list.goal_description': '$goal_support_list.goal_detail.short_description',
-          'goal_support_list.organisation_name': '$goal_support_list.organisation_details.org_name',
-          'goal_support_list.organisation_number':
-            '$goal_support_list.organisation_details.organisation_number',
-          'goal_support_list.organisation_logo_base64':
-            '$goal_support_list.organisation_details.org_logo_base64',
-          'goal_support_list.organisation_logo': '$goal_support_list.organisation_details.logo',
-          'goal_support_list.pending_payment_list.goal_title':
-            '$goal_support_list.goal_detail.title',
-        },
-      },
-      {
-        $project: {
-          'goal_support_list.agreement_payload': 0,
-          'goal_support_list.goal_detail': 0,
-          'goal_support_list.__v': 0,
-          'goal_support_list.payment_list': 0,
-          'goal_support_list.accounts': 0,
-          'goal_support_list.organisation_details': 0,
-          'goal_support_list.active_goal_support': 0,
-          'goal_support_list.all_pending_payment_list': 0,
-          'goal_support_list.goal_supports': 0,
-          'goal_support_list.sport_details': 0,
-        },
-      },
-      {
-        $group: {
-          _id: '$_id',
-          first_name: {
-            $first: '$first_name',
-          },
-          last_name: {
-            $first: '$last_name',
-          },
-          email: {
-            $first: '$email',
-          },
-          mobile_number: {
-            $first: '$mobile_number',
-          },
-          image: {
-            $first: '$image',
-          },
-          status: {
-            $first: '$status',
-          },
-          session_id: {
-            $first: '$session_id',
-          },
-          session_id_date: {
-            $first: '$session_id_date',
-          },
-          created_at: {
-            $first: '$created_at',
-          },
-          total_amount: {
-            $first: '$total_amount',
-          },
-          pending_total_amount: {
-            $first: '$pending_total_amount',
-          },
-          bank_account: {
-            $first: '$bank_account',
-          },
-          bank_id: {
-            $first: '$bank_id',
-          },
-          bank_name: {
-            $first: '$bank_name',
-          },
-          bank_connection_list: {
-            $first: '$bank_connection_list',
-          },
-          active_goal_support_count: {
-            $first: '$active_goal_support_count',
-          },
-          stopped_goal_support_count: {
-            $first: '$stopped_goal_support_count',
-          },
-          paused_goal_support_count: {
-            $first: '$paused_goal_support_count',
-          },
-          unread_notifications_count: {
-            $first: '$unread_notifications_count',
-          },
-          goal_support_list: {
-            $push: '$goal_support_list',
-          },
-        },
-      },
-    ]
-    const userDetail = await UserModel.aggregate(aggregateCondition)
-    if (userDetail?.length === 0) {
-      return apiResponse.notFoundResponse(
-        res,
-        'Beklager, vi finner ikke dataen du ser etter.',
-        'Not found!'
-      )
-    }
-    // filter the goal support if the goal support _id does not exist.
-    userDetail[0].goal_support_list = userDetail[0].goal_support_list.filter(
-      (goalSupport) => goalSupport?._id
-    )
-
-    const filteredUserProfile = {
-      ...userDetail[0],
-      bank_connection_list: userDetail[0]?.bank_connection_list?.length
-        ? [
-            {
-              id: userDetail[0]?.bank_connection_list[0]?.id || '',
-              bban: userDetail[0]?.bank_connection_list[0]?.bban || '',
-              displayName: userDetail[0]?.bank_connection_list[0]?.displayName || '',
-            },
-          ]
-        : [],
-    }
-
-    userDetail[0].unread_notifications_count = await notification.countDocuments({
-      user_id: new ObjectId(userId),
-      read: false,
-    })
-    return apiResponse.successResponseWithData(
-      res,
-      'Brukerdetaljene ble hentet',
-      'User detail fetched successfully',
-      filteredUserProfile
-    )
-  } catch (err) {
-    next(err)
-  }
-}
-
 const getUsers = async (req, res, next) => {
   const term = req?.query?.search ? req?.query?.search : ''
   const role = req?.query?.role ? req?.query?.role : 'all'
@@ -1079,14 +172,14 @@ const getUsers = async (req, res, next) => {
 
   if (term) {
     orCod.push(
-      {first_name: {$regex: term, $options: 'i'}},
-      {last_name: {$regex: term, $options: 'i'}},
-      {mobile_number: {$regex: term, $options: 'i'}},
-      {email: {$regex: term, $options: 'i'}}
+      { first_name: { $regex: term, $options: 'i' } },
+      { last_name: { $regex: term, $options: 'i' } },
+      { mobile_number: { $regex: term, $options: 'i' } },
+      { email: { $regex: term, $options: 'i' } }
     )
   }
   if (role != 'all' && role) {
-    andCod.push({'user_type.role': role})
+    andCod.push({ 'user_type.role': role })
   }
 
   console.log(andCod)
@@ -1126,7 +219,7 @@ const updateUser = async (req, res, next) => {
       req.body.image = req?.file?.location
     }
     if (req.body.password) {
-      req.body.password = await hashPassord({password: req.body.password})
+      req.body.password = await hashPassord({ password: req.body.password })
     }
     // if (req.user.id !== req.params.id) {
     //   return apiResponse.ErrorResponse(
@@ -1246,14 +339,14 @@ const loginUser = async (req, res, next) => {
 
     // Generate JWT Access Token
     const token = await generateToken(
-      {id: user.id, user_type: '', role: 'app'},
+      { id: user.id, user_type: '', role: 'app' },
       process.env.JWT_SECRET_KEY,
       process.env.JWT_AUTH_TOKEN_EXPIRE
     )
 
     // Generate JWT Refresh Token
     const refreshToken = await generateToken(
-      {id: user.id, user_type: '', role: 'app'},
+      { id: user.id, user_type: '', role: 'app' },
       process.env.JWT_SECRET_KEY_REFRESH_TOKEN,
       process.env.JWT_REFRESH_TOKEN_EXPIRE
     )
@@ -1263,7 +356,7 @@ const loginUser = async (req, res, next) => {
     user.refresh_token = refreshToken
 
     await UserModel.updateOne(
-      {_id: user?._id},
+      { _id: user?._id },
       {
         access_token: token,
         refresh_token: refreshToken,
@@ -1315,7 +408,7 @@ const refreshTokenUser = async (req, res, next) => {
         }
 
         const newToken = await generateToken(
-          {id: user.id, user_type: '', role: 'app'},
+          { id: user.id, user_type: '', role: 'app' },
           process.env.JWT_SECRET_KEY,
           process.env.JWT_AUTH_TOKEN_EXPIRE
         )
@@ -1354,9 +447,9 @@ const searchUser = async (req, res, next) => {
 
     const findOptions = {
       $or: [
-        {first_name: {$regex: term, $options: 'i'}},
-        {last_name: {$regex: term, $options: 'i'}},
-        {mobile_number: {$regex: term, $options: 'i'}},
+        { first_name: { $regex: term, $options: 'i' } },
+        { last_name: { $regex: term, $options: 'i' } },
+        { mobile_number: { $regex: term, $options: 'i' } },
       ],
     }
 
@@ -1491,14 +584,14 @@ const loginFrontEndVerifyOtp = async (req, res, next) => {
 
     // Generate JWT Access Token
     const token = await generateToken(
-      {id: user.id, user_type: '', role: 'app'},
+      { id: user.id, user_type: '', role: 'app' },
       process.env.JWT_SECRET_KEY,
       process.env.JWT_AUTH_TOKEN_EXPIRE
     )
 
     // Generate JWT Refresh Token
     const refreshToken = await generateToken(
-      {id: user.id, user_type: '', role: 'app'},
+      { id: user.id, user_type: '', role: 'app' },
       process.env.JWT_SECRET_KEY_REFRESH_TOKEN,
       process.env.JWT_REFRESH_TOKEN_EXPIRE
     )
@@ -1566,7 +659,7 @@ const loginFrontEndResendOtp = async (req, res, next) => {
 
 const createUserFrontEnd = async (req, res, next) => {
   try {
-    const {email, password} = req.body
+    const { email, password } = req.body
 
     function isValidEmail(value) {
       const re =
@@ -1585,7 +678,7 @@ const createUserFrontEnd = async (req, res, next) => {
 
     req.body.image = req?.file?.location || ''
 
-    const {...itemDetails} = req.body
+    const { ...itemDetails } = req.body
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
       return apiResponse.validationErrorWithData(
@@ -1642,9 +735,9 @@ const createUserFrontEnd = async (req, res, next) => {
 
 const sendUserFrontEndPasswordResetEmail = async (req, res, next) => {
   try {
-    const {email} = req.body
+    const { email } = req.body
     if (email) {
-      const user = await UserModel.findOne({email})
+      const user = await UserModel.findOne({ email })
       if (user) {
         const passwordReset = await OrganisationUserPasswordResetModel.create({
           user_id: user?.id,
@@ -1702,7 +795,7 @@ const getUserFrontEndResetPasswordRequestDetails = async (req, res, next) => {
 
 const changeUserFrontEndUserPassword = async (req, res, next) => {
   try {
-    const {password, request_id} = req.body
+    const { password, request_id } = req.body
     if (!password) {
       return apiResponse.ErrorResponse(res, 'Passord er påkrevd', 'Password is Required')
     }
@@ -1721,7 +814,7 @@ const changeUserFrontEndUserPassword = async (req, res, next) => {
     console.log(newHashPassword)
 
     await UserModel.findByIdAndUpdate(requestDetail.user_id, {
-      $set: {password: newHashPassword},
+      $set: { password: newHashPassword },
     })
 
     await OrganisationUserPasswordResetModel.findByIdAndDelete(request_id)
@@ -1733,16 +826,10 @@ const changeUserFrontEndUserPassword = async (req, res, next) => {
 }
 
 const getDetailProfileStatsData = async (req, res, next) => {
-  const userId = req?.user?.id
+  const role = req?.query?.role ? req?.query?.role : 'customer'
+  const userId = req?.query?.user_id ? req?.query?.user_id : req?.user?.id
+
   if (!userId) {
-    return apiResponse.validationErrorWithData(
-      res,
-      'Beklager, det oppstod en valideringsfeil.',
-      'Validation Error',
-      'Invalid Data'
-    )
-  }
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
     return apiResponse.validationErrorWithData(
       res,
       'Beklager, det oppstod en valideringsfeil.',
@@ -1971,7 +1058,6 @@ const getDetailProfileStatsData = async (req, res, next) => {
       },
     },
   ]
-  const userDetail1 = await TenderModel.aggregate(aggregateCondition1)
 
   ///////driver Stats//////////////
 
@@ -2206,15 +1292,26 @@ const getDetailProfileStatsData = async (req, res, next) => {
       },
     },
   ]
-  const userDetail2 = await TenderModel.aggregate(aggregateCondition2)
 
+  const userDetail = await TenderModel.aggregate(
+    role == 'customer' ? aggregateCondition1 : aggregateCondition2
+  )
+
+  const unread_notifications_count = await notification.count({
+    receiver_id: new ObjectId(userId),
+    read: false,
+  })
+
+  // req?.user?.access_token=''
+  // req?.user?.refresh_token=''
   return apiResponse.successResponseWithData(
     res,
     'Brukerdetaljene ble hentet',
     'User detail fetched successfully',
     {
-      customer_stats: userDetail1?.length > 0 ? userDetail1[0] : null,
-      driver_stats: userDetail2?.length > 0 ? userDetail2[0] : null,
+      customer_stats: userDetail?.length > 0 ? userDetail[0] : null,
+      driver_stats: userDetail?.length > 0 ? userDetail[0] : null,
+      unread_notifications_count: unread_notifications_count,
       user: req?.user,
     }
   )
@@ -2224,7 +1321,6 @@ module.exports = {
   loginVippsAuthUri,
   loginVippsUserInfo,
   getUsers,
-  getDetailProfile,
   getDetailProfileStatsData,
   getUser,
   updateUser,
@@ -2241,6 +1337,4 @@ module.exports = {
   sendUserFrontEndPasswordResetEmail,
   getUserFrontEndResetPasswordRequestDetails,
   changeUserFrontEndUserPassword,
-  getDetailProfileCustomer,
-  getDetailProfileDriver,
 }

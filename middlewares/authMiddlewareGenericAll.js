@@ -13,15 +13,15 @@ const checkAuthOrigins = async (req, res, next) => {
     const SecurePathsOrg = [
       'http://192.168.10.10:8002',
       'http://localhost:3011',
-      'https://org.stotte.no',
-      'https://testorg.stotte.no',
+      'https://org.HYhm.no',
+      'https://testorg.HYhm.no',
     ]
     const SecurePathsAdmin = [
       'http://192.168.10.10:8002',
       'http://localhost:3012',
       'http://localhost:3000',
-      'https://admin.stotte.no',
-      'https://testadmin.stotte.no',
+      'https://admin.HYhm.no',
+      'https://testadmin.HYhm.no',
     ]
     /* Check request coming from browser  */
     if (ua.browser.name !== undefined) {
@@ -89,7 +89,7 @@ const checkAuthOrigins = async (req, res, next) => {
         //     )
         //   })
         /* Admin Origin and data check  */
-        const {id, token} = await decodeAndVerifyToken(req)
+        const { id, token } = await decodeAndVerifyToken(req)
         const data = await AdminModel.findOne({
           _id: id,
           access_token: token,
@@ -126,7 +126,7 @@ const checkAuthOrigins = async (req, res, next) => {
       const isMatchTest = testAgentsList.some((rx) => rx.test(req.headers['user-agent']))
 
       if (isMatch) {
-        const {id, token} = await decodeAndVerifyToken(req)
+        const { id, token } = await decodeAndVerifyToken(req)
         const data = await UserModel.findOne({
           _id: id,
           access_token: token,
@@ -141,7 +141,7 @@ const checkAuthOrigins = async (req, res, next) => {
         req.user = data
         next()
       } else if (isMatchTest) {
-        const {id, token} = await decodeAndVerifyToken(req)
+        const { id, token } = await decodeAndVerifyToken(req)
         Promise.all([
           UserModel.findOne({
             _id: id,
@@ -192,8 +192,8 @@ const decodeAndVerifyToken = async (req, res, next) => {
         const token = authorization.split(' ')[1]
 
         // Verify Token
-        const {id} = jwt.verify(token, process.env.JWT_SECRET_KEY)
-        return {id, token}
+        const { id } = jwt.verify(token, process.env.JWT_SECRET_KEY)
+        return { id, token }
       } catch (error) {
         return apiResponse.unauthorizedResponse(
           res,

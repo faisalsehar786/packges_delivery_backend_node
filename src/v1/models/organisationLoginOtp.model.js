@@ -1,9 +1,9 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const organisationLoginOtpSchema = new mongoose.Schema({
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "OrganisationUser",
+    ref: 'OrganisationUser',
     required: true,
   },
   otp: {
@@ -15,11 +15,8 @@ const organisationLoginOtpSchema = new mongoose.Schema({
     default: Date.now,
     expires: 300, // Expires after 5 minutes (300 in seconds)
   },
-});
+})
 
-const OrganisationLoginOtp = mongoose.model(
-  "OrganisationLoginOtp",
-  organisationLoginOtpSchema
-);
+const OrganisationLoginOtp = mongoose.model('OrganisationLoginOtp', organisationLoginOtpSchema)
 
-module.exports = OrganisationLoginOtp;
+module.exports = OrganisationLoginOtp

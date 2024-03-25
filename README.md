@@ -1,28 +1,36 @@
+# Støtte REST API
 
+It is a REST API for Støtte system.
 
-Node.js, Express and MongodB
+## Description
 
-Dev Link (Domain):
-Dev Link (AWS Link): 
+This API provides the backend functionality for the Støtte App, Støtte Org Panel & Støtte Admin Panel.
 
-## What will you learn ?
-What will you learn by downloading my code?
-- Use of **express** to make API creation simple
-- Using **mongoose** to manage communication with Mongo DB
-- Image Upload with **multer**
-- Image deletion with the notions of paths and file system in node
-- Field validation using **express-validator**
-- Creation of reusable methods thanks to the concept of **modules**
-- Creation of a functional REST API with Node.js, Express and Mongo DB.
+## Getting Started
 
-Are you ready ? Let's go
+### Prerequisites
 
-## Step 1: Installing dependencies
-Clone the repository then run **npm install**
+Ensure you have Node.js version 16.x installed on your machine.
 
-## Step 2: Link your api to Mongo DB
-You can install mongodb locally or use Mongo Atlas (online). In both cases, go to the **app.js** file then replace the url **mongodb://localhost:27017/stotte-app** with your url. In my case I use Mongo DB locally. It is therefore available on port **27017**(by default) and the name of my database is **stotte-app**.
+### Installation
 
-## Step 3: Launch your project
-To launch your project, just type the following command : **node app.js**. Your API will therefore run on port 8002
+1. Clone the repository
+2. Install the dependencies with `npm install`
 
+## Usage
+
+You can start the server with `npm run start` for a production environment. For a development environment, use `npm run dev`.
+
+## Dependencies
+
+This project uses several dependencies, including Express for the server, Mongoose for MongoDB object modeling, and several others for various utilities. See the `package.json` file for the full list.
+
+## API Endpoints
+
+The base URLs for the API endpoints are as follows:
+
+- Local: `http://localhost:8002/api/v1/`
+- Staging: `https://testapi.HYhm.no/api/v1/`
+- Production: `https://api.HYhm.no/api/v1/`
+
+Please refer to the API documentation for more details on the available endpoints and their usage.

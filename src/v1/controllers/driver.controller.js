@@ -2,9 +2,9 @@ const TenderModel = require('../models/tender.model')
 const DriverReuest = require('../models/driverRequests.model')
 const PaymentModal = require('../models/payment.model')
 const UserModal = require('../models/user.model')
-const {slugify} = require('../../../utils/customfunctions')
+const { slugify } = require('../../../utils/customfunctions')
 const apiResponse = require('../../../helpers/apiResponse')
-const {v1: uuidv1, v4: uuidv4} = require('uuid')
+const { v1: uuidv1, v4: uuidv4 } = require('uuid')
 const {
   getPagination,
   softDelete,
@@ -26,21 +26,21 @@ const driversRequestForTender = async (req, res, next) => {
     const status = req?.query?.status ? req?.query?.status : 'all'
     const filter = getFilterOptions(req)
 
-    let andCod = [{customer_id: customer_id}]
+    let andCod = [{ customer_id: customer_id }]
     let orCod = []
 
     if (term) {
-      orCod.push({title: {$regex: term, $options: 'i'}})
+      orCod.push({ title: { $regex: term, $options: 'i' } })
     }
     if (status != 'all' && status) {
-      andCod.push({status: status})
+      andCod.push({ status: status })
     }
 
     if (customer_id) {
-      andCod.push({customer_id: customer_id})
+      andCod.push({ customer_id: customer_id })
     }
     if (tender_id) {
-      andCod.push({tender_id: tender_id})
+      andCod.push({ tender_id: tender_id })
     }
 
     return await getPaginationWithPopulate({
@@ -87,7 +87,7 @@ const driversRequestForTender = async (req, res, next) => {
 }
 const createDriverReuest = async (req, res, next) => {
   try {
-    const {tender_id, customer_id, driver_id} = req.body
+    const { tender_id, customer_id, driver_id } = req.body
     const check = await TenderModel.findOne({
       _id: tender_id,
       tender_status: 'accepted',
@@ -98,7 +98,7 @@ const createDriverReuest = async (req, res, next) => {
         res,
         'Oppretting vellykket.',
         `Tender is not availbe for Request because already has been assigned`,
-        {request_send: false}
+        { request_send: false }
       )
     }
 
@@ -124,7 +124,7 @@ const createDriverReuest = async (req, res, next) => {
         res,
         'Oppretting vellykket.',
         ` Driver Reuest For Tender send Successfully`,
-        {request_send: true}
+        { request_send: true }
       )
     } else {
       await createItemReturnData({
@@ -137,7 +137,7 @@ const createDriverReuest = async (req, res, next) => {
         res,
         'Oppretting vellykket.',
         ` Driver Reuest For Tender send Successfully`,
-        {request_send: true}
+        { request_send: true }
       )
     }
   } catch (err) {
@@ -151,28 +151,47 @@ const getdriverTenders = async (req, res, next) => {
     const status = req?.query?.status ? req?.query?.status : 'all'
     const order_status = req?.query?.order_status ? req?.query?.order_status : 'all'
     const order_awarded = req?.query?.order_awarded ? req?.query?.order_awarded : 'all'
-
+    const withOrCond = req?.query?.withOrCond ? req?.query?.withOrCond : 'no'
     const driver_id = req?.query?.driver_id ? req?.query?.driver_id : req.user.id
     const filter = getFilterOptions(req)
 
-    let andCod = [{driver_id: driver_id}]
+    let andCod = [{ driver_id: driver_id }]
     let orCod = []
 
-    if (term) {
-      orCod.push({title: {$regex: term, $options: 'i'}})
-    }
-    if (status != 'all' && status) {
-      andCod.push({tender_status: status})
-    }
-    if (order_status != 'all' && order_status) {
-      andCod.push({'order.order_status': order_status})
-    }
+    if (withOrCond == 'no') {
+      if (term) {
+        orCod.push({ title: { $regex: term, $options: 'i' } })
+      }
+      if (status != 'all' && status) {
+        andCod.push({ tender_status: status })
+      }
+      if (order_status != 'all' && order_status) {
+        andCod.push({ 'order.order_status': order_status })
+      }
 
-    if (order_awarded != 'all' && order_awarded) {
-      andCod.push(
-        {'order_awarded.awarded_to_driver': driver_id},
-        {'order_awarded.order_awarded_status': order_awarded}
-      )
+      if (order_awarded != 'all' && order_awarded) {
+        andCod.push(
+          { 'order_awarded.awarded_to_driver': driver_id },
+          { 'order_awarded.order_awarded_status': order_awarded }
+        )
+      }
+    } else {
+      if (term) {
+        orCod.push({ title: { $regex: term, $options: 'i' } })
+      }
+      if (status != 'all' && status) {
+        orCod.push({ tender_status: status })
+      }
+      if (order_status != 'all' && order_status) {
+        orCod.push({ 'order.order_status': order_status })
+      }
+
+      if (order_awarded != 'all' && order_awarded) {
+        andCod.push(
+          { 'order_awarded.awarded_to_driver': driver_id },
+          { 'order_awarded.order_awarded_status': order_awarded }
+        )
+      }
     }
 
     return await getPaginationWithPopulate({
@@ -224,18 +243,18 @@ const driversRequestHistoryForTenders = async (req, res, next) => {
     const status = req?.query?.status ? req?.query?.status : 'all'
     const filter = getFilterOptions(req)
 
-    let andCod = [{driver_id: driver_id}]
+    let andCod = [{ driver_id: driver_id }]
     let orCod = []
 
     if (term) {
-      orCod.push({title: {$regex: term, $options: 'i'}})
+      orCod.push({ title: { $regex: term, $options: 'i' } })
     }
     if (status != 'all' && status) {
-      andCod.push({status: status})
+      andCod.push({ status: status })
     }
 
     if (tender_id) {
-      andCod.push({tender_id: tender_id})
+      andCod.push({ tender_id: tender_id })
     }
 
     return await getPaginationWithPopulate({
@@ -297,14 +316,14 @@ const getNearestTender = async (req, res, next) => {
     let orCod = []
 
     if (term) {
-      orCod.push({title: {$regex: term, $options: 'i'}})
+      orCod.push({ title: { $regex: term, $options: 'i' } })
     }
 
     if (status != 'all' && status) {
-      andCod.push({tender_status: status})
+      andCod.push({ tender_status: status })
     }
     if (order_status != 'all' && order_status) {
-      andCod.push({'order.order_status': order_status})
+      andCod.push({ 'order.order_status': order_status })
     }
 
     if (latitude && longitude) {
@@ -380,9 +399,9 @@ const getNearestDriverForTender = async (req, res, next) => {
 
     if (term) {
       orCod.push({
-        first_name: {$regex: term, $options: 'i'},
-        last_name: {$regex: term, $options: 'i'},
-        email: {$regex: term, $options: 'i'},
+        first_name: { $regex: term, $options: 'i' },
+        last_name: { $regex: term, $options: 'i' },
+        email: { $regex: term, $options: 'i' },
       })
     }
 

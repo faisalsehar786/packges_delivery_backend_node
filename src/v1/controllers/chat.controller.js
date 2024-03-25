@@ -9,7 +9,7 @@ const apiResponse = require('../../../helpers/apiResponse')
 const ObjectId = require('mongodb').ObjectId
 const createChat = async (req, res, next) => {
   try {
-    const {messageType} = req.body
+    const { messageType } = req.body
     ;(req.body.imageUrl = messageType === 'image' ? req?.file?.location : null),
       await createItem({
         req,
@@ -25,7 +25,7 @@ const createChat = async (req, res, next) => {
 const getChat = async (req, res, next) => {
   try {
     const itemId = req.params.id
-    return await getItem({id: itemId, Model: chatModel, res})
+    return await getItem({ id: itemId, Model: chatModel, res })
   } catch (err) {
     next(err)
   }
@@ -33,17 +33,16 @@ const getChat = async (req, res, next) => {
 
 const getChats = async (req, res, next) => {
   try {
-    const {senderId, recepientId, tender_id} = req.params
-    const term = req.query.search
+    const { senderId, recepientId } = req?.query
+
     return await getPaginationWithPopulate({
       req,
       res,
       model: chatModel,
       findOptions: {
-        $and: [{tender_id: tender_id}],
         $or: [
-          {senderId: senderId, recepientId: recepientId},
-          {senderId: recepientId, recepientId: senderId},
+          { senderId: senderId, recepientId: recepientId },
+          { senderId: recepientId, recepientId: senderId },
         ],
       },
       populateObject: [
@@ -76,6 +75,8 @@ const getChatsUsers = async (req, res, next) => {
   try {
     const page = req.query.page > 0 ? parseInt(req.query.page, 10) : 1
     const perPage = req.query.limit ? parseInt(req.query.limit, 10) : 10
+
+    console.log(req?.user?.id)
 
     const aggregateCondition = [
       {
@@ -232,7 +233,7 @@ const getChatsUsers = async (req, res, next) => {
 }
 const deleteChat = async (req, res, next) => {
   try {
-    const {messages} = req.body
+    const { messages } = req.body
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return apiResponse.validationErrorWithData(
@@ -242,7 +243,7 @@ const deleteChat = async (req, res, next) => {
         'Invalid Data'
       )
     }
-    await chatModel.deleteMany({_id: {$in: messages}})
+    await chatModel.deleteMany({ _id: { $in: messages } })
     return apiResponse.successResponseWithData(res, 'Deleted', `Message deleted successfully`, {
       deleted: true,
     })

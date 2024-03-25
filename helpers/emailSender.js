@@ -1,8 +1,8 @@
-const nodemailer = require("nodemailer");
-const sgMail = require("@sendgrid/mail");
+const nodemailer = require('nodemailer')
+const sgMail = require('@sendgrid/mail')
 
-const sgMailApiKey = process.env.SENDGRID_API_KEY;
-sgMail.setApiKey(sgMailApiKey);
+const sgMailApiKey = process.env.SENDGRID_API_KEY
+sgMail.setApiKey(sgMailApiKey)
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER, // Admin Gmail ID
     pass: process.env.EMAIL_PASS, // Admin Gmail Password
   },
-});
+})
 
 // send email using nodemailer
 exports.send = (from, to, subject, html) =>
@@ -24,52 +24,52 @@ exports.send = (from, to, subject, html) =>
     subject, // Subject line e.g. 'Hello ✔'
     // text: text, // plain text body e.g. Hello world?
     html, // html body e.g. '<b>Hello world?</b>'
-  });
+  })
 
-  // <p>Hello ${fullName}, <br> Welocome to TagTap AR Application. <br>Your new password is: <b>${password}</b></p>
+// <p>Hello ${fullName}, <br> Welocome to TagTap AR Application. <br>Your new password is: <b>${password}</b></p>
 // send email using sendgrid
 module.exports.sendEmail = (toEmail, emailSubject, emailBody) => {
   sgMail
     .send({
       to: toEmail,
-      from: { name: "Stotte", email: "tech@stotte.no" },
+      from: { name: 'HYhm', email: 'tech@hyhm.no' },
       subject: emailSubject,
       text: emailBody,
-      html: `<img src="https://org.stotte.no/media/logos/SlogoNew.jpg" alt="stotte" width="50" height="50"> <br><br> ${emailBody}`,
+      html: `<img src="https://org.HYhm.no/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
     })
     .then(
       () => {},
       (error) => {
-        console.error(error);
+        console.error(error)
 
         if (error.response) {
-          console.error(error.response.body);
+          console.error(error.response.body)
         }
       }
-    );
-};
+    )
+}
 
 // send email with sendgrid dynamic template
 module.exports.sendTemplate = (to, from, templateId, dynamic_template_data) => {
   const msg = {
     to,
-    from: { name: "Stotte", email: from },
+    from: { name: 'HYhm', email: from },
     templateId,
     dynamic_template_data,
-  };
-  console.log(msg);
+  }
+  console.log(msg)
   sgMail
     .send(msg)
     .then((response) => {
-      console.log("mail-sent-successfully", {
+      console.log('mail-sent-successfully', {
         templateId,
         dynamic_template_data,
-      });
-      console.log("response", response);
+      })
+      console.log('response', response)
       /* assume success */
     })
     .catch((error) => {
       /* log friendly error */
-      console.error("send-grid-error: ", error.toString());
-    });
-};
+      console.error('send-grid-error: ', error.toString())
+    })
+}
