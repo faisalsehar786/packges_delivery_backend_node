@@ -1,10 +1,10 @@
-# Støtte REST API
+# HYHM REST API
 
-It is a REST API for Støtte system.
+It is a REST API for HYHM system.
 
 ## Description
 
-This API provides the backend functionality for the Støtte App, Støtte Org Panel & Støtte Admin Panel.
+This API provides the backend functionality for the HYHM App, HYHM Org Panel & HYHM Admin Panel.
 
 ## Getting Started
 

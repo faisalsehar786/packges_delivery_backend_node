@@ -1,9 +1,9 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
-const {ObjectId} = require('mongodb')
-const {validationResult} = require('express-validator')
+const { ObjectId } = require('mongodb')
+const { validationResult } = require('express-validator')
 const apiResponse = require('../../../helpers/apiResponse')
-const {generateToken, verifyToken} = require('../../../middlewares/authMiddleware')
+const { generateToken, verifyToken } = require('../../../middlewares/authMiddleware')
 const AdminModel = require('../models/admin.model')
 const AdminUserPasswordResetModel = require('../models/adminPasswordReset.model')
 const TenderModel = require('../models/tender.model')
@@ -14,8 +14,8 @@ const {
   hashPassord,
   getItemWithPopulate,
 } = require('../../../helpers/commonApis')
-const {sendEmail} = require('../../../helpers/emailSender')
-const {generateOTP} = require('../../../helpers/otpVerification')
+const { sendEmail } = require('../../../helpers/emailSender')
+const { generateOTP } = require('../../../helpers/otpVerification')
 const userModel = require('../models/user.model')
 
 const loginAdmin = async (req, res, next) => {
@@ -69,8 +69,8 @@ const loginAdmin = async (req, res, next) => {
     <br>Din engangskode for pålogging er: <strong>${otp}</strong>
     <br>Bruk denne engangskoden for å logge på kontoen din.
     <br><br>Med vennlig hilsen,
-    <br>Team Støtte`
-    await sendEmail(user.email, 'Logg inn OTP', emailBody)
+    <br>Team HYHM`
+    // await sendEmail(user.email, 'Logg inn OTP', emailBody)
 
     return apiResponse.successResponseWithData(
       res,
@@ -118,14 +118,14 @@ const loginAdminVerifyOtp = async (req, res, next) => {
 
     // Generate JWT Access Token
     const token = await generateToken(
-      {id: user.id, user_type: user.user_type, role: 'admin'},
+      { id: user.id, user_type: user.user_type, role: 'admin' },
       process.env.JWT_SECRET_KEY,
       process.env.JWT_AUTH_TOKEN_EXPIRE
     )
 
     // Generate JWT Refresh Token
     const refreshToken = await generateToken(
-      {id: user.id, user_type: user.user_type, role: 'admin'},
+      { id: user.id, user_type: user.user_type, role: 'admin' },
       process.env.JWT_SECRET_KEY_REFRESH_TOKEN,
       process.env.JWT_REFRESH_TOKEN_EXPIRE
     )
@@ -177,7 +177,7 @@ const loginAdminResendOtp = async (req, res, next) => {
     <br>Din engangskode for pålogging er: <strong>${otpDetail.otp}</strong>
     <br>Bruk denne engangskoden for å logge på kontoen din.
     <br><br>Med vennlig hilsen,
-    <br>Team Støtte`
+    <br>Team HYHM`
     await sendEmail(otpDetail.user_id.email, 'Logg inn OTP', emailBody)
 
     return apiResponse.successResponseWithData(
@@ -219,7 +219,7 @@ const logoutAdmin = async (req, res, next) => {
 
 const createAdmin = async (req, res, next) => {
   try {
-    const {email, password} = req.body
+    const { email, password } = req.body
 
     function isValidEmail(value) {
       const re =
@@ -237,7 +237,7 @@ const createAdmin = async (req, res, next) => {
     }
 
     req.body.image = req?.file?.location || ''
-    const {...itemDetails} = req.body
+    const { ...itemDetails } = req.body
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
       return apiResponse.validationErrorWithData(
@@ -268,12 +268,12 @@ const createAdmin = async (req, res, next) => {
         user_id: createdItem?._id,
       })
       const body = `Hei ${req.body.first_name} ${req.body.last_name}!
-      <br>Velkommen til Støtte plattformen.
+      <br>Velkommen til HYHM plattformen.
       <br><br>Klikk her for å fullføre registreringsprosessen:
       <br><a href=${process.env.ADMIN_DOMAIN_URL}/create-account/${passwordReset?._id} target="_blank">${process.env.ADMIN_DOMAIN_URL}/create-account/${passwordReset?._id}</a>
       <br><br>Med vennlig hilsen,
-      <br>Team Støtte`
-      sendEmail(req.body.email, 'Støtte - Ny bruker', body)
+      <br>Team HYHM`
+      sendEmail(req.body.email, 'HYHM - Ny bruker', body)
       return apiResponse.successResponseWithData(
         res,
         'Oppretting vellykket.',
@@ -295,12 +295,12 @@ const createAdmin = async (req, res, next) => {
     //     user_id: findUser?.id,
     //   });
     //   const body = `Hei ${req.body.first_name} ${req.body.last_name}!
-    //   <br>Velkommen til Støtte plattformen.
+    //   <br>Velkommen til HYHM plattformen.
     //   <br><br>Klikk her for å fullføre registreringsprosessen:
     //   <br><a href=${process.env.ADMIN_DOMAIN_URL}/reset-password/${passwordReset.id} target="_blank">${process.env.ADMIN_DOMAIN_URL}/reset-password/${passwordReset.id}</a>
     //   <br><br>Med vennlig hilsen,
-    //   <br>Team Støtte`;
-    //   sendEmail(req.body.email, "Støtte - Ny bruker", body);
+    //   <br>Team HYHM`;
+    //   sendEmail(req.body.email, "HYHM - Ny bruker", body);
     // }
   } catch (err) {
     next(err)
@@ -391,7 +391,7 @@ const getAdmins = async (req, res, next) => {
       res,
       model: AdminModel,
       findOptions: {
-        $or: [{firstName: {$regex: term, $options: 'i'}}, {lastName: {$regex: term}}],
+        $or: [{ firstName: { $regex: term, $options: 'i' } }, { lastName: { $regex: term } }],
       },
     })
   } catch (err) {
@@ -448,7 +448,7 @@ const updateProfile = async (req, res, next) => {
           'Password Validation failed'
         )
       }
-      req.body.password = await hashPassord({password: req.body.password})
+      req.body.password = await hashPassord({ password: req.body.password })
     }
     // update admin profile
     const updatedAdmin = await AdminModel.findByIdAndUpdate(req.params.id, req.body, {
@@ -507,9 +507,9 @@ const updateAdmin = async (req, res, next) => {
           <br>Her er ny innlogginsinfo:
           <br><br>Brukernavn: ${adminUser.email}
           <br>Passord: ${req.body.password}`
-        sendEmail(adminUser.email, 'Støtte - Bruker oppdatert', body)
+        sendEmail(adminUser.email, 'HYHM - Bruker oppdatert', body)
       }
-      req.body.password = await hashPassord({password: req.body.password})
+      req.body.password = await hashPassord({ password: req.body.password })
     }
     // update admin profile
     const updatedAdmin = await AdminModel.findByIdAndUpdate(req.params.id, req.body, {
@@ -543,18 +543,18 @@ const updateAdmin = async (req, res, next) => {
 
 const sendUserPasswordResetEmail = async (req, res, next) => {
   try {
-    const {email} = req.body
+    const { email } = req.body
     if (email) {
-      const user = await AdminModel.findOne({email})
+      const user = await AdminModel.findOne({ email })
       if (user) {
         const passwordReset = await AdminUserPasswordResetModel.create({
           user_id: user?.id,
         })
         const emailBody = `Hei ${user.first_name} ${user.last_name},
-        <br>Følg linken under for å angi et nytt passord for din Støtte konto:
+        <br>Følg linken under for å angi et nytt passord for din HYHM konto:
         <br><a href=${process.env.ADMIN_DOMAIN_URL}/reset-password/${passwordReset.id} target="_blank">${process.env.ADMIN_DOMAIN_URL}/reset-password/${passwordReset.id}</a>
         <br><br>Med vennlig hilsen,
-        <br>Team Støtte`
+        <br>Team HYHM`
         await sendEmail(user.email, 'Tilbakestill ditt passord', emailBody)
         // await sendPasswordResetEmail(user.email, { user, link }, res);
 
@@ -601,8 +601,8 @@ const getResetPasswordRequestDetails = async (req, res, next) => {
 
 const userPasswordReset = async (req, res, next) => {
   try {
-    const {password, password_confirmation} = req.body
-    const {id, token} = req.params
+    const { password, password_confirmation } = req.body
+    const { id, token } = req.params
     const user = await AdminModel.findById(id)
 
     await verifyToken(token, process.env.JWT_SECRET_KEY)
@@ -618,7 +618,7 @@ const userPasswordReset = async (req, res, next) => {
       const salt = await bcrypt.genSalt(10)
       const newHashPassword = await bcrypt.hash(password, salt)
       await AdminModel.findByIdAndUpdate(user._id, {
-        $set: {password: newHashPassword},
+        $set: { password: newHashPassword },
       })
 
       return apiResponse.successResponse(res, 'Passord tilbakestilt', 'Password Reset Successfully')
@@ -656,7 +656,7 @@ const refreshingToken = async (req, res, next) => {
         }
 
         const newToken = await generateToken(
-          {id: user.id, user_type: user.user_type, role: 'admin'},
+          { id: user.id, user_type: user.user_type, role: 'admin' },
           process.env.JWT_SECRET_KEY,
           process.env.JWT_AUTH_TOKEN_EXPIRE
         )
@@ -684,7 +684,7 @@ const loggedUser = async (req, res, next) => {
   try {
     if (req.user) {
       await getItemWithPopulate({
-        query: {_id: req.user._id},
+        query: { _id: req.user._id },
         Model: AdminModel,
         populateObject: [],
         res,
@@ -699,7 +699,7 @@ const loggedUser = async (req, res, next) => {
 
 const changeUserPassword = async (req, res, next) => {
   try {
-    const {password, request_id} = req.body
+    const { password, request_id } = req.body
     if (!password) {
       return apiResponse.ErrorResponse(res, 'Passord er påkrevd', 'Password is Required')
     }
@@ -714,7 +714,7 @@ const changeUserPassword = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10)
     const newHashPassword = await bcrypt.hash(password, salt)
     await AdminModel.findByIdAndUpdate(requestDetail.user_id, {
-      $set: {password: newHashPassword},
+      $set: { password: newHashPassword },
     })
     await AdminUserPasswordResetModel.findByIdAndDelete(request_id)
 
@@ -1030,7 +1030,7 @@ const getAppUsersStats = async (req, res, next) => {
       },
     ]
 
-    const constDriver = await userModel.count({'user_type.role': 'driver'})
+    const constDriver = await userModel.count({ 'user_type.role': 'driver' })
 
     const userDetail = await userModel.aggregate(aggregateCondition)
 

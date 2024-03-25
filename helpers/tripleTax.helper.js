@@ -95,7 +95,7 @@ async function createOrder(organisation, amount, vatamt) {
         overdueNoticeEmail: organisation.email,
         number: uuid,
         reference: uuid,
-        invoiceComment: `Total Støtte mottatt forrige måned: NOK ${amount}`,
+        invoiceComment: `Total HYHM mottatt forrige måned: NOK ${amount}`,
         currency: {
           id: 1,
         },

@@ -537,7 +537,7 @@ const loginFrontEnd = async (req, res, next) => {
     <br>Din engangskode for pålogging er: <strong>${otp}</strong>
     <br>Bruk denne engangskoden for å logge på kontoen din.
     <br><br>Med vennlig hilsen,
-    <br>Team Støtte`
+    <br>Team HYHM`
     await sendEmail(user.email, 'Logg inn OTP', emailBody)
 
     return apiResponse.successResponseWithData(
@@ -641,7 +641,7 @@ const loginFrontEndResendOtp = async (req, res, next) => {
     <br>Din engangskode for pålogging er: <strong>${otpDetail.otp}</strong>
     <br>Bruk denne engangskoden for å logge på kontoen din.
     <br><br>Med vennlig hilsen,
-    <br>Team Støtte`
+    <br>Team HYHM`
     await sendEmail(otpDetail.user_id.email, 'Logg inn OTP', emailBody)
 
     return apiResponse.successResponseWithData(
@@ -709,12 +709,12 @@ const createUserFrontEnd = async (req, res, next) => {
         user_id: createdItem?._id,
       })
       const body = `Hei ${req.body.first_name} ${req.body.last_name}!
-      <br>Velkommen til Støtte plattformen.
+      <br>Velkommen til HYHM plattformen.
       <br><br>Klikk her for å fullføre registreringsprosessen:
       <br><a href=${process.env.ORG_DOMAIN_URL}/create-account/${passwordReset?._id} target="_blank">${process.env.ORG_DOMAIN_URL}/create-account/${passwordReset?._id}</a>
       <br><br>Med vennlig hilsen,
-      <br>Team Støtte`
-      sendEmail(req.body.email, 'Støtte - Ny bruker', body)
+      <br>Team HYHM`
+      sendEmail(req.body.email, 'HYHM - Ny bruker', body)
       return apiResponse.successResponseWithData(
         res,
         'Oppretting vellykket.',
@@ -743,10 +743,10 @@ const sendUserFrontEndPasswordResetEmail = async (req, res, next) => {
           user_id: user?.id,
         })
         const emailBody = `Hei ${user.first_name} ${user.last_name},
-        <br>Følg linken under for å angi et nytt passord for din Støtte konto:
+        <br>Følg linken under for å angi et nytt passord for din HYHM konto:
         <br><a href=${process.env.ORG_DOMAIN_URL}/reset-password/${passwordReset.id} target="_blank">${process.env.ORG_DOMAIN_URL}/reset-password/${passwordReset.id}</a>
         <br><br>Med vennlig hilsen,
-        <br>Team Støtte`
+        <br>Team HYHM`
         await sendEmail(user.email, 'Tilbakestill ditt passord', emailBody)
         // await sendPasswordResetEmail(user.email, { user, link }, res);
 
