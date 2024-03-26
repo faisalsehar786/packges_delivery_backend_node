@@ -1302,8 +1302,7 @@ const getDetailProfileStatsData = async (req, res, next) => {
     read: false,
   })
 
-  // req?.user?.access_token=''
-  // req?.user?.refresh_token=''
+  const user = await UserModel.findOne({ _id: userId })
   return apiResponse.successResponseWithData(
     res,
     'Brukerdetaljene ble hentet',
@@ -1312,7 +1311,7 @@ const getDetailProfileStatsData = async (req, res, next) => {
       customer_stats: userDetail?.length > 0 ? userDetail[0] : null,
       driver_stats: userDetail?.length > 0 ? userDetail[0] : null,
       unread_notifications_count: unread_notifications_count,
-      user: req?.user,
+      user: user,
     }
   )
 }
