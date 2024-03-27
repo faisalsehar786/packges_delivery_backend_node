@@ -30,7 +30,7 @@ const createTender = async (req, res, next) => {
   req.body.slug = slugify(req?.body?.title)
   req.body.customer_id = req?.user?.id
   req.body.order = {
-    order_no: uuidv4(),
+    order_no: uuidv1(),
   }
 
   try {

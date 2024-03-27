@@ -1,9 +1,9 @@
 const TenderModel = require('../models/tender.model')
 const DriverReuest = require('../models/driverRequests.model')
 const PaymentModal = require('../models/payment.model')
-const {slugify} = require('../../../utils/customfunctions')
+const { slugify } = require('../../../utils/customfunctions')
 const apiResponse = require('../../../helpers/apiResponse')
-const {v1: uuidv1, v4: uuidv4} = require('uuid')
+const { v1: uuidv1, v4: uuidv4 } = require('uuid')
 const {
   getPagination,
   softDelete,
@@ -116,7 +116,7 @@ const cancelOrderByNo = async (req, res, next) => {
             'order_awarded.$.order_awarded_status': 'cancel',
           },
         },
-        {new: true}
+        { new: true }
       )
       return apiResponse.successResponseWithData(
         res,
@@ -145,7 +145,7 @@ const completeOrderByNo = async (req, res, next) => {
         'order.order_no': req.params.id,
       },
       updateobject: {
-        tender_status: 'accepted',
+        tender_status: 'completed',
         'order.order_status': 'completed',
       },
       req,
@@ -162,7 +162,7 @@ const completeOrderByNo = async (req, res, next) => {
             'order_awarded.$.order_awarded_status': 'completed',
           },
         },
-        {new: true}
+        { new: true }
       )
       return apiResponse.successResponseWithData(
         res,
@@ -186,9 +186,9 @@ const completeOrderByNo = async (req, res, next) => {
 const getTrackedOrder_By_Order_No_Id_or_With_Payment_Details = async (req, res, next) => {
   try {
     const order_no = req?.query?.order_no
-      ? {$and: [{'order.order_no': req?.query?.order_no}]}
+      ? { $and: [{ 'order.order_no': req?.query?.order_no }] }
       : null
-    const order_id = req?.query?.order_id ? {$and: [{_id: req?.query?.order_id}]} : null
+    const order_id = req?.query?.order_id ? { $and: [{ _id: req?.query?.order_id }] } : null
     const query = order_no ? order_no : order_id
     const payments_record = req?.query?.payments_record ? req?.query?.payments_record : false
 
@@ -257,7 +257,7 @@ const getTrackedOrder_By_Order_No_Id_or_With_Payment_Details = async (req, res, 
 
         console.log(item?.order?.order_no)
         const paymentsList = await PaymentModal.find({
-          $or: [{tender_id: item?._id}, {order_no: item?.order?.order_no}],
+          $or: [{ tender_id: item?._id }, { order_no: item?.order?.order_no }],
         }).populate(paymentpopulateObject)
         payment_record_list = paymentsList
       }

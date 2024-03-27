@@ -3,42 +3,42 @@ const mongooseDelete = require('mongoose-delete')
 
 const tenderSchema = new mongoose.Schema(
   {
-    customer_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
-    driver_id: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
-    title: {type: String, default: ''},
-    slug: {type: String, default: ''},
-    deliver_to_details: {type: String, default: ''},
-    description: {type: String, default: ''},
+    customer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    driver_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    title: { type: String, default: '' },
+    slug: { type: String, default: '' },
+    deliver_to_details: { type: String, default: '' },
+    description: { type: String, default: '' },
     files: [
       {
-        path: {type: String, default: ''},
+        path: { type: String, default: '' },
       },
     ],
-    total_price: {type: Number, default: 0},
+    total_price: { type: Number, default: 0 },
     tender_variations: [
       {
-        text: {type: String, default: ''},
-        weight: {type: Number, default: 0},
-        width: {type: Number, default: 0},
-        height: {type: Number, default: 0},
-        created_date: {type: Date, default: Date.now},
+        text: { type: String, default: '' },
+        weight: { type: Number, default: 0 },
+        width: { type: Number, default: 0 },
+        height: { type: Number, default: 0 },
+        created_date: { type: Date, default: Date.now },
       },
-    ],  
+    ],
     order_awarded: [
       {
-        awarded_to_driver: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
+        awarded_to_driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
         order_awarded_status: {
           type: String,
           enum: ['accepted', 'cancel', 'completed'],
           default: 'accepted',
         },
-        created_date: {type: Date, default: Date.now},
+        created_date: { type: Date, default: Date.now },
       },
     ],
-    pickup_date: {type: Date, default: Date.now},
-    delivery_date: {type: Date, default: Date.now},
+    pickup_date: { type: Date, default: Date.now },
+    delivery_date: { type: Date, default: Date.now },
     order: {
-      order_no: {type: String, default: ''},
+      order_no: { type: String, default: '' },
       order_status: {
         type: String,
         enum: [
@@ -100,7 +100,7 @@ const tenderSchema = new mongoose.Schema(
     },
     tender_status: {
       type: String,
-      enum: ['published', 'accepted'],
+      enum: ['published', 'accepted', 'completed', 'draft'],
       default: 'published',
     },
   },
@@ -112,7 +112,7 @@ const tenderSchema = new mongoose.Schema(
     },
   }
 )
-tenderSchema.index({location_from: '2dsphere'})
-tenderSchema.plugin(mongooseDelete, {overrideMethods: 'all'})
+tenderSchema.index({ location_from: '2dsphere' })
+tenderSchema.plugin(mongooseDelete, { overrideMethods: 'all' })
 
 module.exports = mongoose.model('Tender', tenderSchema)
