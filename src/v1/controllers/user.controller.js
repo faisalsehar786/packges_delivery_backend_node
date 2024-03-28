@@ -846,70 +846,14 @@ const getDetailProfileStatsData = async (req, res, next) => {
          * query: The query in MQL.
          */
         {
-          $or: [
-            // {
-            //   'order_awarded.awarded_to_driver': new ObjectId(userId),
-            // },
+          $and: [
             {
               customer_id: new ObjectId(userId),
             },
           ],
         },
     },
-    {
-      $addFields:
-        /**
-         * newField: The new field name.
-         * expression: The new field expression.
-         */
-        {
-          driver_order_completed: {
-            $size: {
-              $filter: {
-                input: '$order_awarded',
-                as: 'orderAwarded',
-                cond: {
-                  $and: [
-                    {
-                      $eq: ['$$orderAwarded.order_awarded_status', 'completed'],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-          driver_order_cancel: {
-            $size: {
-              $filter: {
-                input: '$order_awarded',
-                as: 'orderAwarded',
-                cond: {
-                  $and: [
-                    {
-                      $eq: ['$$orderAwarded.order_awarded_status', 'cancel'],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-          driver_order_accepted: {
-            $size: {
-              $filter: {
-                input: '$order_awarded',
-                as: 'orderAwarded',
-                cond: {
-                  $and: [
-                    {
-                      $eq: ['$$orderAwarded.order_awarded_status', 'accepted'],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-        },
-    },
+
     {
       $lookup:
         /**
@@ -922,9 +866,9 @@ const getDetailProfileStatsData = async (req, res, next) => {
          */
         {
           from: 'payments',
-          localField: 'driver_id',
-          foreignField: 'driver_id',
-          as: 'driver_payments',
+          localField: 'customer_id',
+          foreignField: 'customer_id',
+          as: 'customer_payments',
         },
     },
     {
@@ -934,9 +878,9 @@ const getDetailProfileStatsData = async (req, res, next) => {
          * expression: The new field expression.
          */
         {
-          driver_total_earning_array: {
+          customer_payment_completed_array: {
             $filter: {
-              input: '$driver_payments',
+              input: '$customer_payments',
               as: 'payment',
               cond: {
                 $and: [
@@ -956,8 +900,88 @@ const getDetailProfileStatsData = async (req, res, next) => {
          * expression: The new field expression.
          */
         {
-          driver_total_earning: {
-            $sum: '$driver_total_earning_array.driver_share_amount',
+          customer_awaiting_for_payment_array: {
+            $filter: {
+              input: '$customer_payments',
+              as: 'payment',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$payment.status', 'awaiting_for_payment'],
+                  },
+                ],
+              },
+            },
+          },
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          customer_payment_cancel_array: {
+            $filter: {
+              input: '$customer_payments',
+              as: 'payment',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$payment.status', 'cancel'],
+                  },
+                ],
+              },
+            },
+          },
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          customer_payment_done_amount: {
+            $sum: '$customer_payment_completed_array.paid_price',
+          },
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          customer_payment_pending_amount: {
+            $sum: '$customer_awaiting_for_payment_array.paid_price',
+          },
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          customer_payment_cancel_amount: {
+            $sum: '$customer_payment_cancel_array.paid_price',
+          },
+        },
+    },
+    {
+      $addFields:
+        /**
+         * newField: The new field name.
+         * expression: The new field expression.
+         */
+        {
+          customer_payment_share_amount: {
+            $sum: '$customer_payment_completed_array.customer_share_amount',
           },
         },
     },
@@ -966,6 +990,12 @@ const getDetailProfileStatsData = async (req, res, next) => {
         _id: 'stats',
         total: {
           $sum: 1,
+        },
+        total_price: {
+          $sum: '$total_price',
+        },
+        order_completed_price: {
+          $first: '$customer_payment_done_amount',
         },
         tender_published: {
           $sum: {
@@ -1054,6 +1084,18 @@ const getDetailProfileStatsData = async (req, res, next) => {
               0,
             ],
           },
+        },
+        customer_payment_done_amount: {
+          $first: '$customer_payment_done_amount',
+        },
+        customer_payment_pending_amount: {
+          $first: '$customer_payment_pending_amount',
+        },
+        customer_payment_cancel_amount: {
+          $first: '$customer_payment_cancel_amount',
+        },
+        customer_payment_share_amount: {
+          $first: '$customer_payment_share_amount',
         },
       },
     },
