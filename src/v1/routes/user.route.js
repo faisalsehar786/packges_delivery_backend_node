@@ -13,6 +13,7 @@ const { passwordValidation, validateRequest } = require('./authValidation/authVa
 router.get('/get_all', checkAdminUserAuth, userController.getUsers)
 router.post('/vipps_login_auth_uri', userController.loginVippsAuthUri)
 router.post('/vipps_login', userController.loginVippsUserInfo)
+router.post('/login_app_store_user', userController.loginAppStoreUser)
 
 router.get('/detail_profile', checkAuthOrigins, userController.getDetailProfileStatsData)
 

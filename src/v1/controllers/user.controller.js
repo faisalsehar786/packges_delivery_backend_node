@@ -18,6 +18,7 @@ const {
   totalItems,
   hashPassord,
   getFilterOptions,
+  updateItemReturnData,
 } = require('../../../helpers/commonApis')
 const notification = require('../models/notification.model')
 const randomNumber = require('../../../utils/randomNumber')
@@ -42,8 +43,86 @@ const loginVippsAuthUri = async (req, res, next) => {
   }
 }
 
+const loginAppStoreUser = async (req, res, next) => {
+  try {
+    if (!req.body.email || !req.body.password || !req.body.role) {
+      return apiResponse.ErrorResponse(res, 'trenger e-post og passord', 'need email and password')
+    }
+
+    const findParams = {
+      email: req.body.email,
+      // app_store_user: true,
+    }
+    // eslint-disable-next-line prefer-const
+    let user = await UserModel.findOne(findParams).exec()
+
+    if (!user) {
+      return apiResponse.notFoundResponse(
+        res,
+        'Ugyldige påloggings opplysninger. Vennligst sjekk brukernavn og passord og prøv igjen.',
+        'Invalid Credentials'
+      )
+    }
+
+    await UserModel.findOneAndUpdate(
+      { _id: user._id },
+      { $addToSet: { user_type: { role: req.body.role } } }
+    )
+
+    // const match = await user.checkPassword(req.body.password, user.password)
+    // if (!match) {
+    //   return apiResponse.notFoundResponse(
+    //     res,
+    //     'Ugyldige påloggings opplysninger. Vennligst sjekk brukernavn og passord og prøv igjen.',
+    //     'Invalid Credentials'
+    //   )
+    // }
+
+    // Generate JWT Access Token
+    const token = await generateToken(
+      { id: user.id, user_type: '', role: 'app' },
+      process.env.JWT_SECRET_KEY,
+      process.env.JWT_AUTH_TOKEN_EXPIRE
+    )
+
+    // Generate JWT Refresh Token
+    const refreshToken = await generateToken(
+      { id: user.id, user_type: '', role: 'app' },
+      process.env.JWT_SECRET_KEY_REFRESH_TOKEN,
+      process.env.JWT_REFRESH_TOKEN_EXPIRE
+    )
+    if (req.body?.push_token) {
+      user.push_token = req.body.push_token
+    }
+    user.access_token = token
+    user.refresh_token = refreshToken
+    await user.save()
+
+    user.password = undefined
+    res.set('Authorization', `Bearer ${refreshToken}`)
+
+    return apiResponse.successResponseWithData(
+      res,
+      `Velkommen ${user.first_name}, autentisering ble vellykket.`,
+      `Welcome ${user.first_name}, User Authenticated Successfully`,
+      {
+        access_token: token,
+        user,
+      }
+    )
+  } catch (err) {
+    next(err)
+  }
+}
 const loginVippsUserInfo = async (req, res, next) => {
   try {
+    if (!req.body.code || !req.body.redirect_uri || !req.body.push_token || req.body.role) {
+      return apiResponse.ErrorResponse(
+        res,
+        'Vennligst oppgi gyldige data',
+        'Please Provide Valid data'
+      )
+    }
     const userInfoPayload = await vippsHelper.getVippsLoginUserInfo(
       req.body.code,
       req.body.redirect_uri
@@ -71,7 +150,13 @@ const loginVippsUserInfo = async (req, res, next) => {
         email: userInfoPayload?.email,
         birth_date: userInfoPayload?.birthdate,
         password: process.env.VIPPS_LOGIN_DEFAULT_PASSCODE,
+        user_type: [{ role: req.body.role }],
       })
+    } else {
+      await UserModel.findOneAndUpdate(
+        { _id: user._id },
+        { $addToSet: { user_type: { role: req.body.role } } }
+      )
     }
 
     if (req.body.push_token) {
@@ -1361,6 +1446,7 @@ const getDetailProfileStatsData = async (req, res, next) => {
 module.exports = {
   loginVippsAuthUri,
   loginVippsUserInfo,
+  loginAppStoreUser,
   getUsers,
   getDetailProfileStatsData,
   getUser,
