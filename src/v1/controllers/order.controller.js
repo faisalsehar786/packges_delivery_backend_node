@@ -58,7 +58,7 @@ const updateOrderByNo = async (req, res, next) => {
     const updateRecord = await updateItemReturnData({
       Model: TenderModel,
       cond: {
-        'order.order_no': req.params.id,
+        'order.order_no': req.params.order_no,
       },
       updateobject: {
         'order.order_current_location.order_address': req?.body?.address,
@@ -91,12 +91,45 @@ const updateOrderByNo = async (req, res, next) => {
   }
 }
 
+const changeOrderStatusByNo = async (req, res, next) => {
+  try {
+    const updateRecord = await updateItemReturnData({
+      Model: TenderModel,
+      cond: {
+        'order.order_no': req.params.order_no,
+      },
+      updateobject: {
+        'order.order_status': req?.body?.order_status,
+      },
+      req,
+      res,
+    })
+    if (updateRecord) {
+      return apiResponse.successResponseWithData(
+        res,
+        'oppdatert',
+        `Order updated Successfully`,
+        updateRecord
+      )
+    } else {
+      return apiResponse.ErrorResponse(
+        res,
+        'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
+        'System went wrong, Kindly try again later or you pass wrong parameters'
+      )
+    }
+  } catch (err) {
+    console.log(err)
+    next(err)
+  }
+}
+
 const cancelOrderByNo = async (req, res, next) => {
   try {
     const updateRecord = await updateItemReturnData({
       Model: TenderModel,
       cond: {
-        'order.order_no': req.params.id,
+        'order.order_no': req.params.order_no,
       },
       updateobject: {
         tender_status: 'published',
@@ -142,7 +175,7 @@ const completeOrderByNo = async (req, res, next) => {
     const updateRecord = await updateItemReturnData({
       Model: TenderModel,
       cond: {
-        'order.order_no': req.params.id,
+        'order.order_no': req.params.order_no,
       },
       updateobject: {
         tender_status: 'completed',
@@ -291,4 +324,5 @@ module.exports = {
   getTrackedOrder_By_Order_No_Id_or_With_Payment_Details,
   cancelOrderByNo,
   completeOrderByNo,
+  changeOrderStatusByNo,
 }

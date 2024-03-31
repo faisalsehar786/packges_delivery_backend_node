@@ -1316,6 +1316,9 @@ const getDetailProfileStatsData = async (req, res, next) => {
         total: {
           $sum: 1,
         },
+        total_price: {
+          $sum: '$total_price',
+        },
         tender_published: {
           $sum: {
             $cond: [
@@ -1421,7 +1424,7 @@ const getDetailProfileStatsData = async (req, res, next) => {
   ]
 
   const userDetail = await TenderModel.aggregate(
-    role == 'customer' ? aggregateCondition1 : aggregateCondition2
+    role == 'customer' ? aggregateCondition1 : role == 'driver' ? aggregateCondition2 : null
   )
 
   const unread_notifications_count = await notification.count({

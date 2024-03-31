@@ -11,7 +11,16 @@ router.get(
   orderController.getTrackedOrder_By_Order_No_Id_or_With_Payment_Details
 )
 router.patch('/update_location/:id', checkUserAuth, orderController.updateOrder)
-router.patch('/update_location_by_order_no/:id', checkUserAuth, orderController.updateOrderByNo)
-router.patch('/cancel_order_by_order_no/:id', checkUserAuth, orderController.cancelOrderByNo)
-router.patch('/complete_order_by_order_no/:id', checkUserAuth, orderController.completeOrderByNo)
+router.patch(
+  '/update_location_by_order_no/:order_no',
+  checkUserAuth,
+  orderController.updateOrderByNo
+)
+router.patch('/cancel_order_by_order_no/:order_no', checkUserAuth, orderController.cancelOrderByNo)
+router.patch('/change_order_status/:order_no', checkUserAuth, orderController.changeOrderStatusByNo)
+router.patch(
+  '/complete_order_by_order_no/:order_no',
+  checkUserAuth,
+  orderController.completeOrderByNo
+)
 module.exports = router
