@@ -3,7 +3,7 @@ const mongooseDelete = require('mongoose-delete')
 
 const chatSchema = new mongoose.Schema(
   {
-    tender_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Tender', default: null},
+    tender_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Tender', default: null },
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -27,7 +27,8 @@ const chatSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
-    message_date: {type: Date, default: Date.now},
+    read: { type: Boolean, default: false },
+    message_date: { type: Date, default: Date.now },
   },
   {
     timestamps: {
@@ -36,6 +37,6 @@ const chatSchema = new mongoose.Schema(
     },
   }
 )
-chatSchema.plugin(mongooseDelete, {overrideMethods: 'all'})
+chatSchema.plugin(mongooseDelete, { overrideMethods: 'all' })
 
 module.exports = mongoose.model('Chat', chatSchema)

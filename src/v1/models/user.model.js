@@ -5,8 +5,8 @@ const bcrypt = require('bcrypt')
 
 const userSchema = new mongoose.Schema(
   {
-    first_name: {type: String, default: ''},
-    last_name: {type: String, default: ''},
+    first_name: { type: String, default: '' },
+    last_name: { type: String, default: '' },
     email: {
       type: String,
       unique: true,
@@ -15,14 +15,18 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
     },
-    mobile_number: {type: String, default: ''},
+    loc_tracking: { type: Boolean, default: false },
+    shipments_tracking: { type: Boolean, default: false },
+    radius_in_km: { type: Number, default: 40 },
+
+    mobile_number: { type: String, default: '' },
     rating: {
       type: Number,
       default: 0,
     },
 
-    birth_date: {type: String, default: Date.now},
-    image: {type: String, default: ''},
+    birth_date: { type: String, default: Date.now },
+    image: { type: String, default: '' },
     status: {
       type: String,
       enum: ['active', 'blocked', 'pending_verification'],
@@ -43,11 +47,11 @@ const userSchema = new mongoose.Schema(
         default: [0, 0],
       },
     },
-    user_type: {type: Array, default: [{role: 'customer'}]},
-    push_token: {type: String},
-    ip_address: {type: String, default: ''},
-    access_token: {type: String, default: ''},
-    refresh_token: {type: String, default: ''},
+    user_type: { type: Array, default: [{ role: 'customer' }] },
+    push_token: { type: String },
+    ip_address: { type: String, default: '' },
+    access_token: { type: String, default: '' },
+    refresh_token: { type: String, default: '' },
   },
   {
     timestamps: {
@@ -85,7 +89,7 @@ userSchema.methods.checkPassword = (password, passwordHash) => {
 
 userSchema.virtual('fullName').get(() => `${this.firstName} ${this.lastName}`)
 
-userSchema.index({current_location: '2d'})
-userSchema.plugin(mongooseDelete, {overrideMethods: 'all'})
+userSchema.index({ current_location: '2d' })
+userSchema.plugin(mongooseDelete, { overrideMethods: 'all' })
 
 module.exports = mongoose.model('User', userSchema)

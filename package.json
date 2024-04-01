@@ -12,7 +12,7 @@
     "node": "16.16.0"
   },
   "scripts": {
-    "start": "node app.js", 
+    "start": "node app.js",
     "dev": "nodemon app.js"
   },
   "imports": {
@@ -55,6 +55,7 @@
     "express-validator": "^6.14.2",
     "get-ssl-certificate": "^2.3.3",
     "helmet": "^7.0.0",
+    "socket.io": "^4.7.5",
     "hpp": "^0.2.3",
     "html-webpack-plugin": "^5.5.0",
     "http-errors": "^2.0.0",
@@ -94,4 +95,4 @@
     "nyc": "^15.1.0",
     "prettier": "^2.7.1"
   }
-} 
+}

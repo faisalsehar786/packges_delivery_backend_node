@@ -1,20 +1,21 @@
 /* eslint-disable no-console */
-const express = require("express");
-const helmet = require("helmet");
-const path = require("path");
-const bodyParser = require("body-parser");
-require("dotenv").config();
-const logger = require("morgan");
-const cors = require("cors");
+const express = require('express')
+const helmet = require('helmet')
+const path = require('path')
+const bodyParser = require('body-parser')
+require('dotenv').config()
+const logger = require('morgan')
+const cors = require('cors')
+
 // const Sentry = require("@sentry/node");
 // const { ProfilingIntegration } = require("@sentry/profiling-node");
 
-const { rateLimiter } = require("./middlewares/rateLimiter");
-const { sanitize } = require("./middlewares/sanitizerMiddleware");
+const { rateLimiter } = require('./middlewares/rateLimiter')
+const { sanitize } = require('./middlewares/sanitizerMiddleware')
 // const errorMesageMiddleware = require("./helpers/error.helper");
 // const neonomicsErrorMiddleware = require("./helpers/neonomicsError.helper");
 
-const app = express();
+const app = express()
 
 // Sentry.init({
 //   dsn: process.env.SENTRY_DSN,
@@ -54,62 +55,62 @@ const app = express();
 // app.use(Sentry.Handlers.tracingHandler());
 
 // Apply the rate limiting middleware to all requests
-app.use(rateLimiter);
+app.use(rateLimiter)
 
-app.disable("x-powered-by");
+app.disable('x-powered-by')
 
 // Apply security headers using helmet middleware
 app.use(
   helmet({
     xssFilter: true,
   })
-);
+)
 
 // Middleware to remove excessive headers
 app.use((req, res, next) => {
-  res.removeHeader("Server");
-  res.removeHeader("X-Powered-By");
-  res.removeHeader("X-RateLimit-Limit");
-  res.removeHeader("X-RateLimit-Remaining");
-  res.removeHeader("X-RateLimit-Reset");
-  next();
-});
+  res.removeHeader('Server')
+  res.removeHeader('X-Powered-By')
+  res.removeHeader('X-RateLimit-Limit')
+  res.removeHeader('X-RateLimit-Remaining')
+  res.removeHeader('X-RateLimit-Reset')
+  next()
+})
 
 // don't show the log when it is test
-if (process.env.NODE_ENV !== "test") {
-  app.use(logger("dev"));
+if (process.env.NODE_ENV !== 'test') {
+  app.use(logger('dev'))
 }
 
 // Increase the request body size limit
-app.use(bodyParser.urlencoded({ extended: true, limit: "16mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '16mb' }))
 
 // Parse request body as JSON
-app.use(bodyParser.json());
+app.use(bodyParser.json())
 
 // Attach sanitizer middleware
-app.use(sanitize);
+app.use(sanitize)
 
 // app.use(express.static(path.join(__dirname, 'public')));
-app.use("/public", express.static(path.join(__dirname, "public")));
+app.use('/public', express.static(path.join(__dirname, 'public')))
 
 const corsConfig = {
   credentials: true,
   origin: true,
-  exposedHeaders: ["Authorization"],
-};
-app.use(cors(corsConfig));
+  exposedHeaders: ['Authorization'],
+}
+app.use(cors(corsConfig))
 
-const { connectDB } = require("./config/connectDB.config");
-const indexRouter = require("./src/v1/routes");
-const apiRouter = require("./src/v1/routes/api");
-const apiResponse = require("./helpers/apiResponse");
+const { connectDB } = require('./config/connectDB.config')
+const indexRouter = require('./src/v1/routes')
+const apiRouter = require('./src/v1/routes/api')
+const apiResponse = require('./helpers/apiResponse')
 
-connectDB();
+connectDB()
 // Use Sentry's error handler middleware
 // app.use(Sentry.Handlers.errorHandler());
 
-app.use("/", indexRouter);
-app.use("/api/v1/", apiRouter);
+app.use('/', indexRouter)
+app.use('/api/v1/', apiRouter)
 // app.get("/debug-sentry", () => {
 //   try {
 //     // Generate an error
@@ -120,9 +121,7 @@ app.use("/api/v1/", apiRouter);
 //   }
 // });
 
-app.all("*", (req, res) =>
-  apiResponse.notFoundResponse(res, "Rute ikke funnet", "Route not found")
-);
+app.all('*', (req, res) => apiResponse.notFoundResponse(res, 'Rute ikke funnet', 'Route not found'))
 
 // eslint-disable-next-line no-unused-vars
 // app.use((err, req, res, next) => {
@@ -150,7 +149,7 @@ app.all("*", (req, res) =>
 //   );
 // });
 
-const port = process.env.PORT;
+const port = process.env.PORT
 app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
-});
+  console.log(`Server listening at http://localhost:${port}`)
+})

@@ -1427,6 +1427,28 @@ const getDetailProfileStatsData = async (req, res, next) => {
     role == 'customer' ? aggregateCondition1 : role == 'driver' ? aggregateCondition2 : null
   )
 
+  // const dataCustomer = await TenderModel.aggregate([
+  //   {
+  //     $match:
+  //       /**
+  //        * query: The query in MQL.
+  //        */
+  //       {
+  //         $and: [
+  //           {
+  //             customer_id: new ObjectId(userId),
+  //             'order.order_status': 'completed',
+  //           },
+  //         ],
+  //       },
+  //   },
+  //   { $group: { _id: null, totalPrice: { $sum: '$total_price' } } },
+  // ]).exec()
+
+  // if (role == 'customer') {
+  //   const priceSet = dataCustomer[0] || { totalPrice: 0 }
+  //   userDetail?.length > 0 ? (userDetail[0].order_completed_price = priceSet?.totalPrice) : null
+  // }
   const unread_notifications_count = await notification.count({
     receiver_id: new ObjectId(userId),
     read: false,

@@ -12,12 +12,18 @@ router.get(
 )
 router.patch('/update_location/:id', checkUserAuth, orderController.updateOrder)
 router.patch(
+  '/update_location_order_loaction_when_in_proccess/:driver_id',
+  checkUserAuth,
+  orderController.trackDriverOrderLocationWhenOnProcess
+)
+router.patch(
   '/update_location_by_order_no/:order_no',
   checkUserAuth,
   orderController.updateOrderByNo
 )
 router.patch('/cancel_order_by_order_no/:order_no', checkUserAuth, orderController.cancelOrderByNo)
 router.patch('/change_order_status/:order_no', checkUserAuth, orderController.changeOrderStatusByNo)
+
 router.patch(
   '/complete_order_by_order_no/:order_no',
   checkUserAuth,

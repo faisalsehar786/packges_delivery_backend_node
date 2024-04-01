@@ -76,8 +76,6 @@ const getChatsUsers = async (req, res, next) => {
     const page = req.query.page > 0 ? parseInt(req.query.page, 10) : 1
     const perPage = req.query.limit ? parseInt(req.query.limit, 10) : 10
 
-    console.log(req?.user?.id)
-
     const aggregateCondition = [
       {
         $match:
@@ -153,7 +151,19 @@ const getChatsUsers = async (req, res, next) => {
               $last: '$notification',
             },
             notification_count: {
-              $size: '$notification',
+              $size: {
+                $filter: {
+                  input: '$notification',
+                  as: 'notificationUnread',
+                  cond: {
+                    $and: [
+                      {
+                        $eq: ['$$notificationUnread.read', false],
+                      },
+                    ],
+                  },
+                },
+              },
             },
           },
       },
@@ -273,6 +283,23 @@ const updateChat = async (req, res, next) => {
   }
 }
 
+const chatMarkAsRead = async (req, res, next) => {
+  try {
+    const { senderId, recepientId } = req?.query
+    await chatModel.updateMany(
+      {
+        $and: [{ senderId: recepientId, recepientId: senderId }],
+      },
+      {
+        $set: { read: true },
+      }
+    )
+
+    return apiResponse.successResponseWithData(res, 'Operasjonssuksess', 'Operation success')
+  } catch (err) {
+    next(err)
+  }
+}
 module.exports = {
   createChat,
   getChat,
@@ -280,4 +307,5 @@ module.exports = {
   deleteChat,
   updateChat,
   getChatsUsers,
+  chatMarkAsRead,
 }

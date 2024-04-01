@@ -1,20 +1,47 @@
 const TenderModel = require('../models/tender.model')
-const DriverReuest = require('../models/driverRequests.model')
 const PaymentModal = require('../models/payment.model')
 const { slugify } = require('../../../utils/customfunctions')
 const apiResponse = require('../../../helpers/apiResponse')
 const { v1: uuidv1, v4: uuidv4 } = require('uuid')
-const {
-  getPagination,
-  softDelete,
-  getPaginationWithPopulate,
-  getItemWithPopulate,
-  updateItem,
-  createItem,
-  getFilterOptions,
-  createItemReturnData,
-  updateItemReturnData,
-} = require('../../../helpers/commonApis')
+const { updateItemReturnData } = require('../../../helpers/commonApis')
+
+const trackDriverOrderLocationWhenOnProcess = async (req, res, next) => {
+  try {
+    const updateRecord = await TenderModel.updateMany(
+      {
+        driver_id: req.params.driver_id,
+        'order.order_status': 'processing',
+      },
+      {
+        $set: {
+          'order.order_current_location.order_address': req?.body?.address,
+          'order.order_current_location.coordinates': [
+            Number(req?.body?.longitude),
+            Number(req?.body?.latitude),
+          ],
+        },
+      }
+    )
+
+    if (updateRecord) {
+      return apiResponse.successResponseWithData(
+        res,
+        'oppdatert',
+        `Order updated Successfully`,
+        updateRecord
+      )
+    } else {
+      return apiResponse.ErrorResponse(
+        res,
+        'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
+        'System went wrong, Kindly try again later or you pass wrong parameters'
+      )
+    }
+  } catch (err) {
+    console.log(err)
+    next(err)
+  }
+}
 
 const updateOrder = async (req, res, next) => {
   try {
@@ -184,6 +211,17 @@ const completeOrderByNo = async (req, res, next) => {
       req,
       res,
     })
+    await updateItemReturnData({
+      Model: PaymentModal,
+      cond: {
+        $and: [{ status: 'awaiting_for_payment' }, { tender_id: updateRecord?._id }],
+      },
+      updateobject: {
+        status: 'completed',
+      },
+      req,
+      res,
+    })
     if (updateRecord) {
       await TenderModel.findOneAndUpdate(
         {
@@ -325,4 +363,5 @@ module.exports = {
   cancelOrderByNo,
   completeOrderByNo,
   changeOrderStatusByNo,
+  trackDriverOrderLocationWhenOnProcess,
 }

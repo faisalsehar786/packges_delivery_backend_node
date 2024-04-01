@@ -1,9 +1,9 @@
 const TenderModel = require('../models/tender.model')
 const DriverReuest = require('../models/driverRequests.model')
 const PaymentModal = require('../models/payment.model')
-const {slugify} = require('../../../utils/customfunctions')
+const { slugify } = require('../../../utils/customfunctions')
 const apiResponse = require('../../../helpers/apiResponse')
-const {v1: uuidv1, v4: uuidv4} = require('uuid')
+const { v1: uuidv1, v4: uuidv4 } = require('uuid')
 const {
   getPagination,
   softDelete,
@@ -18,15 +18,10 @@ const {
 
 const acceptDriverRequestForTender = async (req, res, next) => {
   try {
-    const {tender_id, request_id} = req.params
+    const { tender_id, request_id } = req.params
     const foundItem = await PaymentModal.findOne({
-      $and: [{status: 'completed'}, {tender_id: tender_id}],
+      $and: [{ status: 'awaiting_for_payment' }, { tender_id: tender_id }],
     })
-
-    // const check = await TenderModel.findOne({
-    //   _id: tender_id,
-    //   tender_status: 'accepted',
-    // })
 
     const updateRecord = await updateItemReturnData({
       Model: DriverReuest,
@@ -41,6 +36,18 @@ const acceptDriverRequestForTender = async (req, res, next) => {
     })
 
     if (updateRecord) {
+      await updateItemReturnData({
+        Model: PaymentModal,
+        cond: {
+          $and: [{ status: 'awaiting_for_payment' }, { tender_id: tender_id }],
+        },
+        updateobject: {
+          driver_id: updateRecord?.driver_id?._id,
+        },
+        req,
+        res,
+      })
+
       const check = await TenderModel.findOne({
         _id: updateRecord?.tender_id,
         'order_awarded.awarded_to_driver': updateRecord?.driver_id,
@@ -59,11 +66,11 @@ const acceptDriverRequestForTender = async (req, res, next) => {
               'order_awarded.$.order_awarded_status': 'accepted',
             },
           },
-          {new: true}
+          { new: true }
         )
       } else {
         await TenderModel.findOneAndUpdate(
-          {_id: updateRecord?.tender_id},
+          { _id: updateRecord?.tender_id },
           {
             $addToSet: {
               order_awarded: {
@@ -72,7 +79,7 @@ const acceptDriverRequestForTender = async (req, res, next) => {
               },
             },
           },
-          {new: true}
+          { new: true }
         )
       }
 
@@ -90,7 +97,7 @@ const acceptDriverRequestForTender = async (req, res, next) => {
         res,
       })
       await DriverReuest.updateMany(
-        {_id: {$ne: request_id}, tender_id: updateRecord?.tender_id},
+        { _id: { $ne: request_id }, tender_id: updateRecord?.tender_id },
         {
           status: 'published',
         }
@@ -101,7 +108,7 @@ const acceptDriverRequestForTender = async (req, res, next) => {
       res,
       'oppdatert',
       `your payment  done against this order or tender`,
-      {payment: foundItem ? true : false, status: 'accepted'}
+      { payment: foundItem ? true : false, status: 'accepted' }
     )
   } catch (err) {
     next(err)
