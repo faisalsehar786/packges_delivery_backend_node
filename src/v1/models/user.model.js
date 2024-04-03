@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    active_role: {
+      type: String,
+      enum: ['driver', 'customer'],
+      default: 'customer',
+    },
     password: {
       type: String,
     },

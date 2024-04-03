@@ -226,6 +226,7 @@ const getTendersAdmin = async (req, res, next) => {
     const term = req?.query?.search ? req?.query?.search : ''
     const status = req?.query?.status ? req?.query?.status : 'all'
     const order_status = req?.query?.order_status ? req?.query?.order_status : 'all'
+    const withOrCond = req?.query?.withOrCond ? req?.query?.withOrCond : 'no'
     const filter = getFilterOptions(req)
 
     let andCod = []
@@ -242,6 +243,34 @@ const getTendersAdmin = async (req, res, next) => {
     }
     if (order_status != 'all' && order_status) {
       andCod.push({ 'order.order_status': order_status })
+    }
+
+    if (withOrCond == 'no') {
+      if (term) {
+        orCod.push(
+          { title: { $regex: term, $options: 'i' } },
+          { 'order.order_no': { $regex: term, $options: 'i' } }
+        )
+      }
+      if (status != 'all' && status) {
+        andCod.push({ tender_status: status })
+      }
+      if (order_status != 'all' && order_status) {
+        andCod.push({ 'order.order_status': order_status })
+      }
+    } else {
+      if (term) {
+        orCod.push(
+          { title: { $regex: term, $options: 'i' } },
+          { 'order.order_no': { $regex: term, $options: 'i' } }
+        )
+      }
+      if (status != 'all' && status) {
+        orCod.push({ tender_status: status })
+      }
+      if (order_status != 'all' && order_status) {
+        orCod.push({ 'order.order_status': order_status })
+      }
     }
 
     return await getPaginationWithPopulate({

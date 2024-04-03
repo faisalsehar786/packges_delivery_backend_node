@@ -17,6 +17,8 @@ router.post('/login_app_store_user', userController.loginAppStoreUser)
 
 router.get('/detail_profile', checkAuthOrigins, userController.getDetailProfileStatsData)
 
+router.get('/detail_profile_v2', checkAuthOrigins, userController.getDetailProfileStatsData)
+
 router.post('/login_test', userController.loginUser)
 //////////////////////////////////////////////////////////////
 

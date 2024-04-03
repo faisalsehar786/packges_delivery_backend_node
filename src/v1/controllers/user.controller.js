@@ -69,14 +69,14 @@ const loginAppStoreUser = async (req, res, next) => {
       { $addToSet: { user_type: { role: req.body.role } } }
     )
 
-    // const match = await user.checkPassword(req.body.password, user.password)
-    // if (!match) {
-    //   return apiResponse.notFoundResponse(
-    //     res,
-    //     'Ugyldige påloggings opplysninger. Vennligst sjekk brukernavn og passord og prøv igjen.',
-    //     'Invalid Credentials'
-    //   )
-    // }
+    const match = await user.checkPassword(req.body.password, user.password)
+    if (!match) {
+      return apiResponse.notFoundResponse(
+        res,
+        'Ugyldige påloggings opplysninger. Vennligst sjekk brukernavn og passord og prøv igjen.',
+        'Invalid Credentials'
+      )
+    }
 
     // Generate JWT Access Token
     const token = await generateToken(
@@ -760,6 +760,9 @@ const createUserFrontEnd = async (req, res, next) => {
         'Invalid Data'
       )
     }
+    if (req.body.password) {
+      req.body.password = await hashPassord({ password: req.body.password })
+    }
 
     req.body.image = req?.file?.location || ''
 
@@ -1197,9 +1200,6 @@ const getDetailProfileStatsData = async (req, res, next) => {
         {
           $or: [
             {
-              'order_awarded.awarded_to_driver': new ObjectId(userId),
-            },
-            {
               driver_id: new ObjectId(userId),
             },
           ],
@@ -1423,6 +1423,7 @@ const getDetailProfileStatsData = async (req, res, next) => {
     },
   ]
 
+  console.log(role)
   const userDetail = await TenderModel.aggregate(
     role == 'customer' ? aggregateCondition1 : role == 'driver' ? aggregateCondition2 : null
   )

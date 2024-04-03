@@ -9,9 +9,13 @@ const notificationSchema = new mongoose.Schema(
     noti_type: {
       type: String,
       default: 'other',
-      enum: ['tender', 'order', 'payment', 'other'],
+      enum: ['tender', 'order', 'payment', 'other', 'app_contact'],
     },
     title: {
+      type: String,
+      default: '',
+    },
+    message: {
       type: String,
       default: '',
     },
