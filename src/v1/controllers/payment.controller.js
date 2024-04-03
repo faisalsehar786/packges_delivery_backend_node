@@ -41,19 +41,19 @@ const createPayment = async (req, res, next) => {
       itemName: 'Payment',
     })
 
-    if (req.body?.status == 'completed') {
-      await updateItemReturnData({
-        Model: TenderModel,
-        cond: {
-          _id: check?._id,
-        },
-        updateobject: {
-          'order.order_status': 'payment_done',
-        },
-        req,
-        res,
-      })
-    }
+    // if (req.body?.status == 'completed') {
+    await updateItemReturnData({
+      Model: TenderModel,
+      cond: {
+        _id: check?._id,
+      },
+      updateobject: {
+        'order.order_status': 'payment_done',
+      },
+      req,
+      res,
+    })
+    // }
   } catch (err) {
     next(err)
   }
