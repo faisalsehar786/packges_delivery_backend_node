@@ -6,6 +6,9 @@ const bodyParser = require('body-parser')
 require('dotenv').config()
 const logger = require('morgan')
 const cors = require('cors')
+const socketIo = require('socket.io')
+const http = require('http')
+const chatModel = require('./src/v1/models/chat.model')
 
 // const Sentry = require("@sentry/node");
 // const { ProfilingIntegration } = require("@sentry/profiling-node");
@@ -149,7 +152,79 @@ app.all('*', (req, res) => apiResponse.notFoundResponse(res, 'Rute ikke funnet',
 //   );
 // });
 
+const server = http.createServer(app)
+const io = socketIo(server)
+let onlineUsers = []
+io.on('connection', (socket) => {
+  console.log(`⚡: ${socket.id} user just connected!`)
+
+  socket.on('new-user-add', async (newUserId) => {
+    if (!onlineUsers.some((user) => user?.userId === newUserId)) {
+      // if user is not added before
+      onlineUsers.push({ userId: newUserId, socketId: socket?.id })
+      console.log('new user is here!', onlineUsers)
+    }
+
+    io.emit('get-users', onlineUsers)
+  })
+
+  socket.on('conect_user_chat_unread_Count', async (newUserId) => {
+    const unreadChatCount = await chatModel.count({
+      $and: [{ recepientId: newUserId, read: false }],
+    })
+    socket.join(newUserId)
+    // Send initial unread message count to the client
+    io.to(socket.id).emit('chatUnreadCount', unreadChatCount)
+  })
+
+  socket.on('newMessage', async (data) => {
+    const { messageType, message, senderId, recepientId } = data
+    const newMessage = new chatModel({ messageType, message, senderId, recepientId })
+    await newMessage.save()
+    io.emit('receiveMessage', newMessage)
+
+    const unreadChatCount = await chatModel.count({
+      $and: [{ recepientId: recepientId, read: false }],
+    })
+
+    // Send initial unread message count to the client
+    io.to(recepientId).emit('chatUnreadCount', unreadChatCount)
+    console.log('New Message', newMessage)
+  })
+
+  socket.on('chatMessageMarkRead', async (data) => {
+    const { senderId, recepientId } = data
+    const dataRes = await chatModel.updateMany(
+      {
+        $and: [{ senderId: recepientId, recepientId: senderId }],
+      },
+      {
+        $set: { read: true },
+      }
+    )
+
+    if (dataRes) {
+      console.log(dataRes)
+      const unreadChatCount = await chatModel.count({
+        $and: [{ recepientId: recepientId, read: false }],
+      })
+
+      // Send initial unread message count to the client
+      io.to(recepientId).emit('chatUnreadCount', unreadChatCount)
+    }
+  })
+
+  socket.on('disconnect', () => {
+    onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
+    console.log('user disconnected', onlineUsers)
+    // send all online users to all users
+    io.emit('get-users', onlineUsers)
+    socket.disconnect()
+    console.log('🔥: A user disconnected')
+  })
+})
+
 const port = process.env.PORT
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`)
 })

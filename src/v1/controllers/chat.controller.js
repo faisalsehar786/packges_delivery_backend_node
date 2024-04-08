@@ -45,26 +45,7 @@ const getChats = async (req, res, next) => {
           { senderId: recepientId, recepientId: senderId },
         ],
       },
-      populateObject: [
-        {
-          path: 'senderId',
-          select: {
-            _id: 1,
-            first_name: 1,
-            last_name: 1,
-            image: 1,
-          },
-        },
-        {
-          path: 'recepientId',
-          select: {
-            _id: 1,
-            first_name: 1,
-            last_name: 1,
-            image: 1,
-          },
-        },
-      ],
+      populateObject: [],
     })
   } catch (err) {
     next(err)
