@@ -9,7 +9,12 @@ const notificationSchema = new mongoose.Schema(
     noti_type: {
       type: String,
       default: 'other',
-      enum: ['tender', 'order', 'payment', 'other', 'app_contact'],
+      enum: ['tender', 'payment', 'other', 'app_support', 'admin'],
+    },
+    noti_for: {
+      type: String,
+      default: 'for_app',
+      enum: ['for_admin', 'for_app'],
     },
     title: {
       type: String,

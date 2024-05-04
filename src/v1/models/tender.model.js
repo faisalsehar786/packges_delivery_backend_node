@@ -98,6 +98,11 @@ const tenderSchema = new mongoose.Schema(
         default: [0, 0],
       },
     },
+    tender_mark_completed_from_customer: {
+      type: String,
+      enum: ['pending', 'completed'],
+      default: 'pending',
+    },
     tender_status: {
       type: String,
       enum: ['published', 'accepted', 'completed', 'draft'],

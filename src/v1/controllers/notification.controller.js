@@ -11,16 +11,16 @@ const {
 } = require('../../../helpers/commonApis')
 
 const createnotification = async (req, res, next) => {
-  // if (typeof req.body.data_object === 'object' && req.body.data_object ) {
-  //   req.body.data_object = req.body.data_object
-  // } else {
-  //   return apiResponse.validationErrorWithData(
-  //     res,
-  //     'Beklager, det oppstod en valideringsfeil.',
-  //     'Validation Error',
-  //     'Invalid Data'
-  //   )
-  // }
+  if (typeof req.body.data_object === 'object' && req.body.data_object) {
+    req.body.data_object = req.body.data_object
+  } else {
+    return apiResponse.validationErrorWithData(
+      res,
+      'Beklager, det oppstod en valideringsfeil.',
+      'Validation Error',
+      'Invalid Data'
+    )
+  }
 
   try {
     await createItem({
@@ -84,103 +84,6 @@ const getnotification = async (req, res, next) => {
   }
 }
 
-const getnotificationSender = async (req, res, next) => {
-  try {
-    const noti_type = req.query.type
-      ? {
-          noti_type: req.query.type,
-        }
-      : {}
-    const read = req.query.read
-      ? {
-          read: req.query.read,
-        }
-      : {}
-    const senderId = req.query.sender_id ? { sender_id: req.query.sender_id } : {}
-    const term = req.query.search
-    const filter = getFilterOptions(req)
-    return await getPaginationWithPopulate({
-      req,
-      res,
-      model: notification,
-      findOptions: {
-        $and: [senderId, read, noti_type],
-        ...filter,
-      },
-      populateObject: [
-        {
-          path: 'sender_id',
-          select: {
-            _id: 1,
-            first_name: 1,
-            last_name: 1,
-            image: 1,
-          },
-        },
-        {
-          path: 'receiver_id',
-          select: {
-            _id: 1,
-            first_name: 1,
-            last_name: 1,
-            image: 1,
-          },
-        },
-      ],
-    })
-  } catch (err) {
-    next(err)
-  }
-}
-
-const getnotificationReceiver = async (req, res, next) => {
-  try {
-    const noti_type = req.query.type
-      ? {
-          noti_type: req.query.type,
-        }
-      : {}
-    const read = req.query.read
-      ? {
-          read: req.query.read,
-        }
-      : {}
-    const receiver_id = req.query.receiver_id ? { receiver_id: req.query.receiver_id } : {}
-    const filter = getFilterOptions(req)
-    return await getPaginationWithPopulate({
-      req,
-      res,
-      model: notification,
-      findOptions: {
-        $and: [receiver_id, read, noti_type],
-        ...filter,
-      },
-      populateObject: [
-        {
-          path: 'sender_id',
-          select: {
-            _id: 1,
-            first_name: 1,
-            last_name: 1,
-            image: 1,
-          },
-        },
-        {
-          path: 'receiver_id',
-          select: {
-            _id: 1,
-            first_name: 1,
-            last_name: 1,
-            image: 1,
-          },
-        },
-      ],
-    })
-  } catch (err) {
-    next(err)
-  }
-}
-
 const deletenotification = async (req, res, next) => {
   try {
     await softDelete({
@@ -194,7 +97,7 @@ const deletenotification = async (req, res, next) => {
   }
 }
 
-const getOneSignalNotification = async (req, res, next) => {
+const getnotifications = async (req, res, next) => {
   try {
     const noti_type = req.query.type
       ? {
@@ -276,10 +179,8 @@ module.exports = {
   createnotification,
   updatenotification,
   getnotification,
-  getnotificationSender,
-  getnotificationReceiver,
   deletenotification,
-  getOneSignalNotification,
+  getnotifications,
   notificationMarkAsRead,
   totalnotificationUnRead,
 }

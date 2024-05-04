@@ -1,6 +1,6 @@
 const apiResponse = require('../../../helpers/apiResponse')
 const zendeskHelper = require('../../../helpers/zendesk.helper')
-
+const { createItemNotificationWithPush } = require('../../../helpers/commonApis')
 const createTicketUser = async (req, res, next) => {
   try {
     const subject = `[APP]: ${req.body?.subject}`
@@ -13,18 +13,28 @@ const createTicketUser = async (req, res, next) => {
         'subject and body are required variables'
       )
     }
-    const data = await zendeskHelper.createTicket(subject, body, fullName, req.user.email)
+
+    await createItemNotificationWithPush({
+      itemDetails: {
+        noti_type: 'app_support',
+        noti_for: 'for_admin',
+        title: `${fullName} - ${subject} - ${req.user.email}`,
+        message: body,
+      },
+      pushNotification: false,
+    })
+    // const data = await zendeskHelper.createTicket(subject, body, fullName, req.user.email)
 
     return apiResponse.successResponseWithData(
       res,
       'Billett Oppretting vellykket.',
       'Ticket Created Successfully',
-      data
+      { inserted: true }
     )
   } catch (err) {
     next(err)
   }
-} 
+}
 
 module.exports = {
   createTicketUser,

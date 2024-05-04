@@ -1,16 +1,16 @@
 const mongoose = require('mongoose')
-const {validationResult} = require('express-validator')
+const { validationResult } = require('express-validator')
 const bcrypt = require('bcrypt')
 const moment = require('moment')
 const apiResponse = require('./apiResponse')
-
-exports.getPagination = async ({req, res, model, findOptions}) => {
+const notification = require('../src/v1/models/notification.model')
+exports.getPagination = async ({ req, res, model, findOptions }) => {
   const order = req.query.order ? req.query.order : 'desc'
   const sortBy = req.query.sortBy ? req.query.sortBy : '_id'
   const page = req.query.page > 0 ? req.query.page : 1
   const perPage = req.query.limit ? parseInt(req.query.limit, 10) : 10
   const term = req.query.search
-  const {check_cond} = req.query
+  const { check_cond } = req.query
   if (term || check_cond) {
     const total = await model.count(findOptions).exec()
     model
@@ -48,13 +48,13 @@ exports.getPagination = async ({req, res, model, findOptions}) => {
   }
 }
 
-exports.getPaginationWithPopulate = async ({req, res, model, findOptions, populateObject}) => {
+exports.getPaginationWithPopulate = async ({ req, res, model, findOptions, populateObject }) => {
   const order = req.query.order ? req.query.order : 'desc'
   const sortBy = req.query.sortBy ? req.query.sortBy : '_id'
   const page = req.query.page > 0 ? req.query.page : 1
   const perPage = req.query.limit ? parseInt(req.query.limit, 10) : 10
   const term = req.query.search
-  const {check_cond} =  req.query  
+  const { check_cond } = req.query
 
   console.log(findOptions)
   if (term || check_cond) {
@@ -68,7 +68,7 @@ exports.getPaginationWithPopulate = async ({req, res, model, findOptions, popula
       .sort([[sortBy, order]])
       .exec((err, data) => {
         if (err) {
-          console.log(err,data)
+          console.log(err, data)
           return apiResponse.ErrorResponse(
             res,
             'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
@@ -98,7 +98,7 @@ exports.getPaginationWithPopulate = async ({req, res, model, findOptions, popula
   }
 }
 
-exports.getItem = async ({id, Model, res, populate = undefined}) => {
+exports.getItem = async ({ id, Model, res, populate = undefined }) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return apiResponse.validationErrorWithData(
       res,
@@ -137,7 +137,7 @@ exports.getItem = async ({id, Model, res, populate = undefined}) => {
   }
 }
 
-exports.getItemWithPopulate = async ({query, Model, populateObject, res}) => {
+exports.getItemWithPopulate = async ({ query, Model, populateObject, res }) => {
   try {
     const item = await Model.findOne(query).populate(populateObject)
     if (!item) {
@@ -163,7 +163,7 @@ exports.getItemWithPopulate = async ({query, Model, populateObject, res}) => {
   }
 }
 
-exports.softDelete = async ({req, res, Model, itemName}) => {
+exports.softDelete = async ({ req, res, Model, itemName }) => {
   try {
     Model.findById(req.params.id, (_, item) => {
       if (item === null) {
@@ -198,7 +198,7 @@ exports.softDelete = async ({req, res, Model, itemName}) => {
   }
 }
 
-exports.softDeleteWithConditionMany = async ({req, res, Model, cond, itemName}) => {
+exports.softDeleteWithConditionMany = async ({ req, res, Model, cond, itemName }) => {
   try {
     const data = await Model.deleteMany()(cond)
     return apiResponse.successResponseWithData(
@@ -216,7 +216,7 @@ exports.softDeleteWithConditionMany = async ({req, res, Model, cond, itemName}) 
   }
 }
 
-exports.softDeleteWithCondition = async ({req, res, Model, cond, itemName}) => {
+exports.softDeleteWithCondition = async ({ req, res, Model, cond, itemName }) => {
   try {
     const data = await Model.deleteOne(cond)
     return apiResponse.successResponseWithData(
@@ -234,7 +234,7 @@ exports.softDeleteWithCondition = async ({req, res, Model, cond, itemName}) => {
   }
 }
 
-exports.hardDelete = async ({req, res, Model, itemName}) => {
+exports.hardDelete = async ({ req, res, Model, itemName }) => {
   try {
     Model.findById(req.params.id, (_, driver) => {
       if (driver === null) {
@@ -264,9 +264,9 @@ exports.hardDelete = async ({req, res, Model, itemName}) => {
   }
 }
 
-exports.createItem = async ({req, res, Model, itemName}) => {
+exports.createItem = async ({ req, res, Model, itemName }) => {
   try {
-    const {...itemDetails} = req.body
+    const { ...itemDetails } = req.body
     console.log(itemDetails)
     const errors = validationResult(req)
 
@@ -314,8 +314,25 @@ exports.createItem = async ({req, res, Model, itemName}) => {
   }
 }
 
-exports.createItemReturnData = async ({req, res, Model, itemName}) => {
-  const {...itemDetails} = req.body
+exports.createItemNotificationWithPush = async ({ itemDetails, pushNotification }) => {
+  try {
+    const createdItem = new notification(itemDetails)
+    createdItem.save(async (err) => {
+      if (err) {
+        return false
+      }
+      if (pushNotification) {
+        return true
+      }
+      return true
+    })
+  } catch (err) {
+    return false
+  }
+}
+
+exports.createItemReturnData = async ({ req, res, Model, itemName }) => {
+  const { ...itemDetails } = req.body
   const errors = validationResult(req)
 
   if (!errors.isEmpty()) {
@@ -331,7 +348,7 @@ exports.createItemReturnData = async ({req, res, Model, itemName}) => {
   return createdItem.save()
 }
 
-exports.updateItemReturnData = async ({Model, cond, updateobject, req, res}) => {
+exports.updateItemReturnData = async ({ Model, cond, updateobject, req, res }) => {
   const errors = validationResult(req)
 
   if (!errors.isEmpty()) {
@@ -348,15 +365,15 @@ exports.updateItemReturnData = async ({Model, cond, updateobject, req, res}) => 
     {
       $set: updateobject,
     },
-    {new: true}
+    { new: true }
   )
 
   return updateRecord
 }
 
-exports.updateItem = async ({req, res, Model, itemName}) => {
+exports.updateItem = async ({ req, res, Model, itemName }) => {
   try {
-    const {...itemDetails} = req.body
+    const { ...itemDetails } = req.body
     console.log(req.body)
     const errors = validationResult(req)
 
@@ -400,7 +417,7 @@ exports.updateItem = async ({req, res, Model, itemName}) => {
         {
           $set: itemDetails,
         },
-        {new: true}
+        { new: true }
       )
       if (updateRecord === null) {
         return apiResponse.ErrorResponse(
@@ -425,8 +442,8 @@ exports.updateItem = async ({req, res, Model, itemName}) => {
     )
   }
 }
- 
-exports.getItemWithPopulate = async ({query, Model, populateObject, res}) => {
+
+exports.getItemWithPopulate = async ({ query, Model, populateObject, res }) => {
   try {
     const item = await Model.findOne(query).populate(populateObject)
     if (!item) {
@@ -451,7 +468,7 @@ exports.getItemWithPopulate = async ({query, Model, populateObject, res}) => {
   }
 }
 
-exports.totalItemsCustomQuery = async ({req, res, Model, query, itemName}) => {
+exports.totalItemsCustomQuery = async ({ req, res, Model, query, itemName }) => {
   try {
     const totalItems = await Model.count(query).exec()
     return apiResponse.successResponseWithData(
@@ -472,8 +489,8 @@ exports.totalItemsCustomQuery = async ({req, res, Model, query, itemName}) => {
 }
 
 exports.getFilterOptions = (req) => {
-  const {filter} = req.query
-  const {startDate, endDate} = req.query
+  const { filter } = req.query
+  const { startDate, endDate } = req.query
   if (filter) {
     const [durationType, duration] = filter.split('-')
     return {
@@ -504,7 +521,7 @@ exports.getFilterOptions = (req) => {
 }
 
 exports.getFilterOptionsmeTimeline = (req) => {
-  const {year} = req.query
+  const { year } = req.query
 
   if (year) {
     const startDate = moment([year]).format('yyyy-MM-DD')
@@ -522,7 +539,7 @@ exports.getFilterOptionsmeTimeline = (req) => {
 }
 
 exports.getFilterOptionsyearly = (req) => {
-  const {filter} = req.query
+  const { filter } = req.query
   if (filter) {
     const startDate = moment([filter]).format('yyyy-MM-DD')
 
@@ -538,7 +555,7 @@ exports.getFilterOptionsyearly = (req) => {
   return undefined
 }
 
-exports.hashPassord = async ({password}) => {
+exports.hashPassord = async ({ password }) => {
   const salt = await bcrypt.genSalt(10)
   const newHashPassword = await bcrypt.hash(password, salt)
   return newHashPassword
