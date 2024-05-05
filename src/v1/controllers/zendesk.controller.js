@@ -16,6 +16,7 @@ const createTicketUser = async (req, res, next) => {
 
     await createItemNotificationWithPush({
       itemDetails: {
+        sender_id: req.user.id,
         noti_type: 'app_support',
         noti_for: 'for_admin',
         title: `${fullName} - ${subject} - ${req.user.email}`,
