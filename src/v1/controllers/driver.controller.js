@@ -135,6 +135,17 @@ const createDriverReuest = async (req, res, next) => {
         Model: DriverReuest,
         itemName: 'Driver Request',
       })
+      // await createItemNotificationWithPush({
+      //   itemDetails: {
+      //     sender_id: req.user.id,
+      //     receiver_id: item?.receiver_id,
+      //     noti_type: item?.notiType,
+      //     noti_for: item?.noti_for,
+      //     title: item?.title,
+      //     message: item?.message,
+      //   },
+      //   pushNotification: true,
+      // })
       return apiResponse.successResponseWithData(
         res,
         'Oppretting vellykket.',

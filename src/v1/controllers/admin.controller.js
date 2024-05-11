@@ -69,8 +69,8 @@ const loginAdmin = async (req, res, next) => {
     <br>Din engangskode for pålogging er: <strong>${otp}</strong>
     <br>Bruk denne engangskoden for å logge på kontoen din.
     <br><br>Med vennlig hilsen,
-    <br>Team HYHM`
-    // await sendEmail(user.email, 'Logg inn OTP', emailBody)
+    <br>Team HMHY`
+    await sendEmail(user.email, 'Logg inn OTP', emailBody)
 
     return apiResponse.successResponseWithData(
       res,
@@ -177,7 +177,7 @@ const loginAdminResendOtp = async (req, res, next) => {
     <br>Din engangskode for pålogging er: <strong>${otpDetail.otp}</strong>
     <br>Bruk denne engangskoden for å logge på kontoen din.
     <br><br>Med vennlig hilsen,
-    <br>Team HYHM`
+    <br>Team HMHY`
     await sendEmail(otpDetail.user_id.email, 'Logg inn OTP', emailBody)
 
     return apiResponse.successResponseWithData(
@@ -268,12 +268,12 @@ const createAdmin = async (req, res, next) => {
         user_id: createdItem?._id,
       })
       const body = `Hei ${req.body.first_name} ${req.body.last_name}!
-      <br>Velkommen til HYHM plattformen.
+      <br>Velkommen til HMHY plattformen.
       <br><br>Klikk her for å fullføre registreringsprosessen:
       <br><a href=${process.env.ADMIN_DOMAIN_URL}/create-account/${passwordReset?._id} target="_blank">${process.env.ADMIN_DOMAIN_URL}/create-account/${passwordReset?._id}</a>
       <br><br>Med vennlig hilsen,
-      <br>Team HYHM`
-      sendEmail(req.body.email, 'HYHM - Ny bruker', body)
+      <br>Team HMHY`
+      sendEmail(req.body.email, 'HMHY - Ny bruker', body)
       return apiResponse.successResponseWithData(
         res,
         'Oppretting vellykket.',
@@ -295,12 +295,12 @@ const createAdmin = async (req, res, next) => {
     //     user_id: findUser?.id,
     //   });
     //   const body = `Hei ${req.body.first_name} ${req.body.last_name}!
-    //   <br>Velkommen til HYHM plattformen.
+    //   <br>Velkommen til HMHY plattformen.
     //   <br><br>Klikk her for å fullføre registreringsprosessen:
     //   <br><a href=${process.env.ADMIN_DOMAIN_URL}/reset-password/${passwordReset.id} target="_blank">${process.env.ADMIN_DOMAIN_URL}/reset-password/${passwordReset.id}</a>
     //   <br><br>Med vennlig hilsen,
-    //   <br>Team HYHM`;
-    //   sendEmail(req.body.email, "HYHM - Ny bruker", body);
+    //   <br>Team HMHY`;
+    //   sendEmail(req.body.email, "HMHY - Ny bruker", body);
     // }
   } catch (err) {
     next(err)
@@ -507,7 +507,7 @@ const updateAdmin = async (req, res, next) => {
           <br>Her er ny innlogginsinfo:
           <br><br>Brukernavn: ${adminUser.email}
           <br>Passord: ${req.body.password}`
-        sendEmail(adminUser.email, 'HYHM - Bruker oppdatert', body)
+        sendEmail(adminUser.email, 'HMHY - Bruker oppdatert', body)
       }
       req.body.password = await hashPassord({ password: req.body.password })
     }
@@ -551,10 +551,10 @@ const sendUserPasswordResetEmail = async (req, res, next) => {
           user_id: user?.id,
         })
         const emailBody = `Hei ${user.first_name} ${user.last_name},
-        <br>Følg linken under for å angi et nytt passord for din HYHM konto:
+        <br>Følg linken under for å angi et nytt passord for din HMHY konto:
         <br><a href=${process.env.ADMIN_DOMAIN_URL}/reset-password/${passwordReset.id} target="_blank">${process.env.ADMIN_DOMAIN_URL}/reset-password/${passwordReset.id}</a>
         <br><br>Med vennlig hilsen,
-        <br>Team HYHM`
+        <br>Team HMHY`
         await sendEmail(user.email, 'Tilbakestill ditt passord', emailBody)
         // await sendPasswordResetEmail(user.email, { user, link }, res);
 

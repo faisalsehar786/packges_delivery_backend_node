@@ -46,6 +46,7 @@ const tenderSchema = new mongoose.Schema(
           'payment_done',
           'processing',
           'on_the_way',
+          'awaiting_for_approval',
           'completed',
           'cancel',
         ],
@@ -103,9 +104,10 @@ const tenderSchema = new mongoose.Schema(
       enum: ['pending', 'completed'],
       default: 'pending',
     },
+
     tender_status: {
       type: String,
-      enum: ['published', 'accepted', 'completed', 'draft'],
+      enum: ['published', 'accepted', 'completed', 'cancel', 'draft', 'awaiting_for_approval'],
       default: 'published',
     },
   },

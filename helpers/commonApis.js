@@ -3,7 +3,10 @@ const { validationResult } = require('express-validator')
 const bcrypt = require('bcrypt')
 const moment = require('moment')
 const apiResponse = require('./apiResponse')
+const { Expo } = require('expo-server-sdk')
+const User = require('../src/v1/models/user.model')
 const notification = require('../src/v1/models/notification.model')
+const expo = new Expo()
 exports.getPagination = async ({ req, res, model, findOptions }) => {
   const order = req.query.order ? req.query.order : 'desc'
   const sortBy = req.query.sortBy ? req.query.sortBy : '_id'
@@ -56,7 +59,6 @@ exports.getPaginationWithPopulate = async ({ req, res, model, findOptions, popul
   const term = req.query.search
   const { check_cond } = req.query
 
-  console.log(findOptions)
   if (term || check_cond) {
     const total = await model.count(findOptions).exec()
     model
@@ -314,20 +316,42 @@ exports.createItem = async ({ req, res, Model, itemName }) => {
   }
 }
 
-exports.createItemNotificationWithPush = async ({ itemDetails, pushNotification }) => {
-  try {
+exports.createItemNotificationWithPush = async ({ itemDetails, pushNotification, insertInDb }) => {
+  if (insertInDb) {
     const createdItem = new notification(itemDetails)
     createdItem.save(async (err) => {
       if (err) {
         return false
       }
-      if (pushNotification) {
-        return true
-      }
       return true
     })
-  } catch (err) {
-    return false
+  }
+
+  if (pushNotification) {
+    const user = await User.findOne({ _id: itemDetails?.receiver_id })
+
+    if (!user) {
+      return false
+    }
+
+    if (!Expo.isExpoPushToken(user?.push_token)) {
+      return false
+    }
+
+    const messages = [
+      {
+        to: user?.push_token,
+        sound: 'default',
+        title: itemDetails?.title,
+        body: itemDetails?.message,
+        data: { itemDetails },
+        // icon: 'http://example.com/icon.png' // URL to the custom icon
+      },
+    ]
+
+    if (await expo.sendPushNotificationsAsync(messages)) {
+      return true
+    }
   }
 }
 
@@ -374,7 +398,7 @@ exports.updateItemReturnData = async ({ Model, cond, updateobject, req, res }) =
 exports.updateItem = async ({ req, res, Model, itemName }) => {
   try {
     const { ...itemDetails } = req.body
-    console.log(req.body)
+
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {

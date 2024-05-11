@@ -3,7 +3,10 @@ const PaymentModal = require('../models/payment.model')
 const { slugify } = require('../../../utils/customfunctions')
 const apiResponse = require('../../../helpers/apiResponse')
 const { v1: uuidv1, v4: uuidv4 } = require('uuid')
-const { updateItemReturnData } = require('../../../helpers/commonApis')
+const {
+  updateItemReturnData,
+  createItemNotificationWithPush,
+} = require('../../../helpers/commonApis')
 
 const trackDriverOrderLocationWhenOnProcess = async (req, res, next) => {
   try {
@@ -132,6 +135,18 @@ const changeOrderStatusByNo = async (req, res, next) => {
       res,
     })
     if (updateRecord) {
+      // await createItemNotificationWithPush({
+      //   itemDetails: {
+      //     sender_id: req.user.id,
+      //     receiver_id: item?.receiver_id,
+      //     noti_type: item?.notiType,
+      //     noti_for: item?.noti_for,
+      //     title: item?.title,
+      //     message: item?.message,
+      //   },
+      //   pushNotification: true,
+      // })
+
       return apiResponse.successResponseWithData(
         res,
         'oppdatert',
@@ -159,13 +174,24 @@ const cancelOrderByNo = async (req, res, next) => {
         'order.order_no': req.params.order_no,
       },
       updateobject: {
-        tender_status: 'published',
+        tender_status: 'cancel',
         'order.order_status': 'cancel',
       },
       req,
       res,
     })
     if (updateRecord) {
+      // await createItemNotificationWithPush({
+      //   itemDetails: {
+      //     sender_id: req.user.id,
+      //     receiver_id: item?.receiver_id,
+      //     noti_type: item?.notiType,
+      //     noti_for: item?.noti_for,
+      //     title: item?.title,
+      //     message: item?.message,
+      //   },
+      //   pushNotification: true,
+      // })
       await TenderModel.findOneAndUpdate(
         {
           _id: updateRecord?._id,
@@ -199,54 +225,118 @@ const cancelOrderByNo = async (req, res, next) => {
 
 const completeOrderByNo = async (req, res, next) => {
   try {
-    const updateRecord = await updateItemReturnData({
-      Model: TenderModel,
-      cond: {
-        'order.order_no': req.params.order_no,
-      },
-      updateobject: {
-        tender_status: 'completed',
-        'order.order_status': 'completed',
-      },
-      req,
-      res,
-    })
-    await updateItemReturnData({
-      Model: PaymentModal,
-      cond: {
-        $and: [{ status: 'awaiting_for_payment' }, { tender_id: updateRecord?._id }],
-      },
-      updateobject: {
-        status: 'completed',
-      },
-      req,
-      res,
-    })
-    if (updateRecord) {
-      await TenderModel.findOneAndUpdate(
-        {
-          _id: updateRecord?._id,
-          'order_awarded.awarded_to_driver': updateRecord?.driver_id,
+    if (req?.body?.for_approval) {
+      const updateRecord = await updateItemReturnData({
+        Model: TenderModel,
+        cond: {
+          'order.order_no': req.params.order_no,
         },
-        {
-          $set: {
-            'order_awarded.$.order_awarded_status': 'completed',
+        updateobject: {
+          tender_status: 'awaiting_for_approval',
+          'order.order_status': 'awaiting_for_approval',
+        },
+        req,
+        res,
+      })
+      // await createItemNotificationWithPush({
+      //   itemDetails: {
+      //     sender_id: req.user.id,
+      //     receiver_id: item?.receiver_id,
+      //     noti_type: item?.notiType,
+      //     noti_for: item?.noti_for,
+      //     title: item?.title,
+      //     message: item?.message,
+      //   },
+      //   pushNotification: true,
+      // })
+      if (updateRecord) {
+        // await createItemNotificationWithPush({
+        //   itemDetails: {
+        //     sender_id: req.user.id,
+        //     receiver_id: item?.receiver_id,
+        //     noti_type: item?.notiType,
+        //     noti_for: item?.noti_for,
+        //     title: item?.title,
+        //     message: item?.message,
+        //   },
+        //   pushNotification: true,
+        // })
+        await TenderModel.findOneAndUpdate(
+          {
+            _id: updateRecord?._id,
+            'order_awarded.awarded_to_driver': updateRecord?.driver_id,
           },
-        },
-        { new: true }
-      )
-      return apiResponse.successResponseWithData(
-        res,
-        'oppdatert',
-        `Order updated Successfully`,
-        updateRecord
-      )
+          {
+            $set: {
+              'order_awarded.$.order_awarded_status': 'completed',
+            },
+          },
+          { new: true }
+        )
+        return apiResponse.successResponseWithData(
+          res,
+          'oppdatert',
+          `Order updated Successfully`,
+          updateRecord
+        )
+      } else {
+        return apiResponse.ErrorResponse(
+          res,
+          'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
+          'System went wrong, Kindly try again later or you pass wrong parameters'
+        )
+      }
     } else {
-      return apiResponse.ErrorResponse(
+      const updateRecord = await updateItemReturnData({
+        Model: TenderModel,
+        cond: {
+          'order.order_no': req.params.order_no,
+        },
+        updateobject: {
+          tender_status: 'completed',
+          'order.order_status': 'completed',
+        },
+        req,
         res,
-        'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
-        'System went wrong, Kindly try again later or you pass wrong parameters'
-      )
+      })
+
+      if (updateRecord) {
+        // await createItemNotificationWithPush({
+        //   itemDetails: {
+        //     sender_id: req.user.id,
+        //     receiver_id: item?.receiver_id,
+        //     noti_type: item?.notiType,
+        //     noti_for: item?.noti_for,
+        //     title: item?.title,
+        //     message: item?.message,
+        //   },
+        //   pushNotification: true,
+        // })
+        await TenderModel.findOneAndUpdate(
+          {
+            _id: updateRecord?._id,
+            'order_awarded.awarded_to_driver': updateRecord?.driver_id,
+          },
+          {
+            $set: {
+              'order_awarded.$.order_awarded_status': 'completed',
+            },
+          },
+          { new: true }
+        )
+        return apiResponse.successResponseWithData(
+          res,
+          'oppdatert',
+          `Order updated Successfully`,
+          updateRecord
+        )
+      } else {
+        return apiResponse.ErrorResponse(
+          res,
+          'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
+          'System went wrong, Kindly try again later or you pass wrong parameters'
+        )
+      }
     }
   } catch (err) {
     console.log(err)

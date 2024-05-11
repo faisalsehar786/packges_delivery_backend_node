@@ -331,17 +331,17 @@ const updateUser = async (req, res, next) => {
     }
 
     // remove password extra fields from user object
-    updatedUser.password = undefined
-    updatedUser.ip_address = undefined
-    updatedUser.access_token = undefined
-    updatedUser.refresh_token = undefined
-    updatedUser.session_id = undefined
-    updatedUser.bank_name = undefined
-    updatedUser.account_id = undefined
-    updatedUser.agreement_id = undefined
-    updatedUser.bank_account = undefined
-    updatedUser.bank_connection_list = undefined
-    updatedUser.push_token = undefined
+    // updatedUser.password = undefined
+    // updatedUser.ip_address = undefined
+    // updatedUser.access_token = undefined
+    // updatedUser.refresh_token = undefined
+    // updatedUser.session_id = undefined
+    // updatedUser.bank_name = undefined
+    // updatedUser.account_id = undefined
+    // updatedUser.agreement_id = undefined
+    // updatedUser.bank_account = undefined
+    // updatedUser.bank_connection_list = undefined
+    // updatedUser.push_token = undefined
 
     return apiResponse.successResponseWithData(
       res,

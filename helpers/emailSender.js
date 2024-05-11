@@ -29,13 +29,13 @@ exports.send = (from, to, subject, html) =>
 // <p>Hello ${fullName}, <br> Welocome to TagTap AR Application. <br>Your new password is: <b>${password}</b></p>
 // send email using sendgrid
 module.exports.sendEmail = (toEmail, emailSubject, emailBody) => {
-  sgMail
-    .send({
+  transporter
+    .sendMail({
       to: toEmail,
-      from: { name: 'HYhm', email: 'tech@hyhm.no' },
+      from: { name: 'HYHM', email: 'tech@hmhy.no' },
       subject: emailSubject,
       text: emailBody,
-      html: `<img src="https://org.HYhm.no/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
+      html: `<img src="https://hyhm.netlify.app/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
     })
     .then(
       () => {},
