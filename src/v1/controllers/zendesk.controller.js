@@ -23,6 +23,7 @@ const createTicketUser = async (req, res, next) => {
         message: body,
       },
       pushNotification: false,
+      insertInDb: true,
     })
     // const data = await zendeskHelper.createTicket(subject, body, fullName, req.user.email)
 

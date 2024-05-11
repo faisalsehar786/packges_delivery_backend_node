@@ -39,6 +39,11 @@ const paymentSchema = new mongoose.Schema(
       enum: ['awaiting_for_payment', 'completed', 'cancel'],
       default: 'awaiting_for_payment',
     },
+    approved: {
+      type: String,
+      enum: ['done', 'pending'],
+      default: 'pending',
+    },
   },
   {
     timestamps: {

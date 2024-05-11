@@ -9,6 +9,7 @@ const {
   createItem,
   getFilterOptions,
   getPaginationWithPopulate,
+  createItemNotificationWithPush,
 } = require('../../../helpers/commonApis')
 
 const createnotification = async (req, res, next) => {
@@ -259,6 +260,21 @@ const sendOnesignalNotifications = async (req, res, next) => {
     })
 
     if (createNotificationArray?.length > 0) {
+      createNotificationArray.map(async (item) => {
+        await createItemNotificationWithPush({
+          itemDetails: {
+            sender_id: req.user.id,
+            receiver_id: item?.receiver_id,
+            noti_type: item?.notiType,
+            noti_for: item?.noti_for,
+            title: item?.title,
+            message: item?.message,
+          },
+          pushNotification: true,
+          insertInDb: false,
+        })
+      })
+
       if (await notification.insertMany(createNotificationArray)) {
         return apiResponse.successResponseWithData(
           res,
