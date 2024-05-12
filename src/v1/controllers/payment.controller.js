@@ -31,7 +31,6 @@ const createPayment = async (req, res, next) => {
   req.body.customer_id = check?.customer_id
   req.body.driver_id = check?.driver_id
   req.body.tender_id = check?._id
-  console.log(req.body)
 
   try {
     await createItem({
@@ -40,20 +39,6 @@ const createPayment = async (req, res, next) => {
       Model: paymentModel,
       itemName: 'Payment',
     })
-
-    // if (req.body?.status == 'completed') {
-    await updateItemReturnData({
-      Model: TenderModel,
-      cond: {
-        _id: check?._id,
-      },
-      updateobject: {
-        'order.order_status': 'payment_done',
-      },
-      req,
-      res,
-    })
-    // }
   } catch (err) {
     next(err)
   }
@@ -174,18 +159,30 @@ const deletePayment = async (req, res, next) => {
 
 const updatePayment = async (req, res, next) => {
   try {
-    await updateItem({
+    const { ...itemDetails } = req.body
+    const resp = await updateItemReturnData({
+      Model: paymentModel,
+      cond: {
+        _id: req?.params?.id,
+      },
+      updateobject: itemDetails,
       req,
       res,
-      Model: paymentModel,
-      itemName: 'Payment',
     })
+
+    if (!resp) {
+      return apiResponse.ErrorResponse(
+        res,
+        'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
+        'System went wrong, Kindly try again later'
+      )
+    }
 
     if (req.body?.status == 'completed') {
       await updateItemReturnData({
         Model: TenderModel,
         cond: {
-          _id: req.params.id,
+          _id: resp?.tender_id,
         },
         updateobject: {
           'order.order_status': 'payment_done',
@@ -194,6 +191,13 @@ const updatePayment = async (req, res, next) => {
         res,
       })
     }
+
+    return apiResponse.successResponseWithData(
+      res,
+      'oppdatert',
+      `payment updated Successfully`,
+      resp
+    )
   } catch (err) {
     next(err)
   }

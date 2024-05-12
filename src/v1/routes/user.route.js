@@ -6,7 +6,7 @@ const mediaUpload = require('../../../middlewares/upload-aws-image')
 const { checkUserAuth } = require('../../../middlewares/authMiddleware')
 const { checkAuthOrigins } = require('../../../middlewares/authMiddlewareGenericAll')
 const { checkAdminUserAuth } = require('../../../middlewares/authMiddlewareAdminPanel')
-const { checkAuthGuard } = require('../../../middlewares/authGuard')
+
 const Roles = require('../../../utils/roles')
 const { passwordValidation, validateRequest } = require('./authValidation/authValidation')
 
@@ -19,7 +19,6 @@ router.get('/detail_profile', checkAuthOrigins, userController.getDetailProfileS
 
 router.get('/detail_profile_v2', checkAuthOrigins, userController.getDetailProfileStatsData)
 
-router.post('/login_test', userController.loginUser)
 //////////////////////////////////////////////////////////////
 
 router.post('/login', userController.loginFrontEnd)
@@ -30,7 +29,7 @@ router.post('/login_resend_otp', userController.loginFrontEndResendOtp)
 
 router.post(
   '/register',
-  // checkAuthGuard([Roles.OrgAdmin]),
+
   mediaUpload.single('picture'),
   userController.createUserFrontEnd
 )
@@ -55,7 +54,7 @@ router.get('/logout', checkUserAuth, userController.logout)
 router.get(
   '/search',
   checkAdminUserAuth,
-  checkAuthGuard([Roles.Admin, Roles.Manager]),
+
   userController.searchUser
 )
 router.get('/:id', checkUserAuth, userController.getUser)

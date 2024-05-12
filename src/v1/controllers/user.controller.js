@@ -97,7 +97,6 @@ const loginAppStoreUser = async (req, res, next) => {
     user.access_token = token
     user.refresh_token = refreshToken
     await user.save()
-
     user.password = undefined
     res.set('Authorization', `Bearer ${refreshToken}`)
 
@@ -500,17 +499,17 @@ const refreshTokenUser = async (req, res, next) => {
         user.access_token = newToken
         await user.save()
         // res.set("Authorization", `Bearer ${newToken}`);
-        user.password = undefined
-        user.ip_address = undefined
-        user.access_token = undefined
-        user.refresh_token = undefined
-        user.session_id = undefined
-        user.bank_name = undefined
-        user.account_id = undefined
-        user.agreement_id = undefined
-        user.bank_account = undefined
-        user.bank_connection_list = undefined
-        user.push_token = undefined
+        // user.password = undefined
+        // user.ip_address = undefined
+        // user.access_token = undefined
+        // user.refresh_token = undefined
+        // user.session_id = undefined
+        // user.bank_name = undefined
+        // user.account_id = undefined
+        // user.agreement_id = undefined
+        // user.bank_account = undefined
+        // user.bank_connection_list = undefined
+        // user.push_token = undefined
 
         return apiResponse.successResponseWithData(res, 'Oppdatert token', 'Updated Token', {
           access_token: newToken,

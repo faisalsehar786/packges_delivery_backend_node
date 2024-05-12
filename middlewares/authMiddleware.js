@@ -15,18 +15,41 @@ const checkUserAuth = async (req, res, next) => {
       token = authorization.split(' ')[1]
 
       // Verify Token
-      const {id} = jwt.verify(token, process.env.JWT_SECRET_KEY)
+      const { id } = jwt.verify(token, process.env.JWT_SECRET_KEY)
       // Get User from Token
-      const data = await UserModel.findOne({
-        _id: id,
-        access_token: token,
-      }).select('-password')
-      if (data) {
+      // const data = await UserModel.findOne({
+      //   _id: id,
+      //   access_token: token,
+      // }).select('-password')
+      // if (data) {
+      //   req.user = data
+      //   next()
+      // } else {
+      //   await checkAdminUserAuth(req, res, next)
+      // }
+      Promise.all([
+        UserModel.findOne({
+          _id: id,
+          access_token: token,
+        }).select('-password'),
+
+        AdminUserModel.findOne({
+          _id: id,
+          access_token: token,
+        }).select('-password'),
+      ]).then((values) => {
+        const [userData, adminData] = values
+        const data = userData || adminData
+        if (!data) {
+          return apiResponse.unauthorizedResponse(
+            res,
+            'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
+            'Unauthorized User'
+          )
+        }
         req.user = data
         next()
-      } else {
-        await checkAdminUserAuth(req, res, next)
-      }
+      })
     } catch (error) {
       return apiResponse.unauthorizedResponse(
         res,
@@ -89,7 +112,7 @@ const checkAdminUserAuth = async (req, res, next) => {
       // eslint-disable-next-line prefer-destructuring
       token = authorization.split(' ')[1]
       // Verify Token
-      const {id} = jwt.verify(token, process.env.JWT_SECRET_KEY)
+      const { id } = jwt.verify(token, process.env.JWT_SECRET_KEY)
 
       console.log(id)
 

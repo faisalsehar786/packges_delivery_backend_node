@@ -268,7 +268,7 @@ const completeOrderByNo = async (req, res, next) => {
           },
           {
             $set: {
-              'order_awarded.$.order_awarded_status': 'completed',
+              'order_awarded.$.order_awarded_status': 'awaiting_for_approval',
             },
           },
           { new: true }
@@ -323,6 +323,10 @@ const completeOrderByNo = async (req, res, next) => {
             },
           },
           { new: true }
+        )
+        await PaymentModal.updateMany(
+          { tender_id: updateRecord?._id },
+          { $set: { approved: 'done' } }
         )
         return apiResponse.successResponseWithData(
           res,

@@ -345,7 +345,7 @@ exports.createItemNotificationWithPush = async ({ itemDetails, pushNotification,
         title: itemDetails?.title,
         body: itemDetails?.message,
         data: { itemDetails },
-        // icon: 'http://example.com/icon.png' // URL to the custom icon
+        // icon: 'https://testadmin.stotte.no/media/logos/S-logo-full-dark.png', // URL to the custom icon
       },
     ]
 
