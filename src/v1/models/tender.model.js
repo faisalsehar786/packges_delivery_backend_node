@@ -29,7 +29,7 @@ const tenderSchema = new mongoose.Schema(
         awarded_to_driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
         order_awarded_status: {
           type: String,
-          enum: ['accepted', 'cancel', 'completed'],
+          enum: ['accepted', 'cancel', 'completed', 'awaiting_for_approval'],
           default: 'accepted',
         },
         created_date: { type: Date, default: Date.now },
@@ -99,11 +99,7 @@ const tenderSchema = new mongoose.Schema(
         default: [0, 0],
       },
     },
-    tender_mark_completed_from_customer: {
-      type: String,
-      enum: ['pending', 'completed'],
-      default: 'pending',
-    },
+
 
     tender_status: {
       type: String,

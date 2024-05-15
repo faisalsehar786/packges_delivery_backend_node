@@ -4,24 +4,11 @@ const PaymentModal = require('../models/payment.model')
 const { slugify } = require('../../../utils/customfunctions')
 const apiResponse = require('../../../helpers/apiResponse')
 const { v1: uuidv1, v4: uuidv4 } = require('uuid')
-const {
-  getPagination,
-  softDelete,
-  getPaginationWithPopulate,
-  getItemWithPopulate,
-  updateItem,
-  createItem,
-  getFilterOptions,
-  createItemReturnData,
-  updateItemReturnData,
-} = require('../../../helpers/commonApis')
+const { updateItemReturnData } = require('../../../helpers/commonApis')
 
 const acceptDriverRequestForTender = async (req, res, next) => {
   try {
     const { tender_id, request_id } = req.params
-    const foundItem = await PaymentModal.findOne({
-      $and: [{ status: 'awaiting_for_payment' }, { tender_id: tender_id }],
-    })
 
     const updateRecord = await updateItemReturnData({
       Model: DriverReuest,
@@ -37,9 +24,21 @@ const acceptDriverRequestForTender = async (req, res, next) => {
 
     if (updateRecord) {
       await updateItemReturnData({
+        Model: TenderModel,
+        cond: {
+          _id: updateRecord?.tender_id,
+        },
+        updateobject: {
+          tender_status: 'accepted',
+          driver_id: updateRecord?.driver_id,
+        },
+        req,
+        res,
+      })
+      await updateItemReturnData({
         Model: PaymentModal,
         cond: {
-          $and: [{ status: 'awaiting_for_payment' }, { tender_id: tender_id }],
+          $and: [{ tender_id: tender_id }],
         },
         updateobject: {
           driver_id: updateRecord?.driver_id?._id,
@@ -48,59 +47,19 @@ const acceptDriverRequestForTender = async (req, res, next) => {
         res,
       })
 
-      const check = await TenderModel.findOne({
-        _id: updateRecord?.tender_id,
-        'order_awarded.awarded_to_driver': updateRecord?.driver_id,
-      })
-
-      if (check) {
-        await TenderModel.findOneAndUpdate(
-          {
-            _id: updateRecord?.tender_id,
-
-            'order_awarded.awarded_to_driver': updateRecord?.driver_id,
-          },
-          {
-            $set: {
-              'order_awarded.$.awarded_to_driver': updateRecord?.driver_id,
-              'order_awarded.$.order_awarded_status': 'accepted',
-            },
-          },
-          { new: true }
-        )
-      } else {
-        await TenderModel.findOneAndUpdate(
-          { _id: updateRecord?.tender_id },
-          {
-            $addToSet: {
-              order_awarded: {
-                awarded_to_driver: updateRecord?.driver_id,
-                order_awarded_status: 'accepted',
-              },
-            },
-          },
-          { new: true }
-        )
-      }
-
-      await updateItemReturnData({
-        Model: TenderModel,
-        cond: {
-          _id: updateRecord?.tender_id,
-        },
-        updateobject: {
-          tender_status: 'accepted',
-          driver_id: updateRecord?.driver_id,
-          'order.order_status': foundItem ? 'payment_done' : 'awaiting_for_payment',
-        },
-        req,
-        res,
-      })
-      await DriverReuest.updateMany(
-        { _id: { $ne: request_id }, tender_id: updateRecord?.tender_id },
+      await TenderModel.findOneAndUpdate(
         {
-          status: 'published',
-        }
+          _id: updateRecord?.tender_id,
+
+          'order_awarded.awarded_to_driver': updateRecord?.driver_id,
+        },
+        {
+          $set: {
+            'order_awarded.$.awarded_to_driver': updateRecord?.driver_id,
+            'order_awarded.$.order_awarded_status': 'accepted',
+          },
+        },
+        { new: true }
       )
     }
 
@@ -116,12 +75,11 @@ const acceptDriverRequestForTender = async (req, res, next) => {
     //   pushNotification: true,
     // })
 
-    return apiResponse.successResponseWithData(
-      res,
-      'oppdatert',
-      `your payment  done against this order or tender`,
-      { payment: foundItem ? true : false, status: 'accepted' }
-    )
+
+    return apiResponse.successResponseWithData(res, 'oppdatert', `Record updated Successfully`, {
+      status: 'accepted',
+    })
+
   } catch (err) {
     next(err)
   }

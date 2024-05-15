@@ -345,7 +345,9 @@ exports.createItemNotificationWithPush = async ({ itemDetails, pushNotification,
         title: itemDetails?.title,
         body: itemDetails?.message,
         data: { itemDetails },
+
         // icon: 'http://example.com/icon.png' // URL to the custom icon
+
       },
     ]
 
