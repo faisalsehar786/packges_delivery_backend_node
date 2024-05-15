@@ -75,9 +75,11 @@ const acceptDriverRequestForTender = async (req, res, next) => {
     //   pushNotification: true,
     // })
 
+
     return apiResponse.successResponseWithData(res, 'oppdatert', `Record updated Successfully`, {
       status: 'accepted',
     })
+
   } catch (err) {
     next(err)
   }

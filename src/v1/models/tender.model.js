@@ -100,6 +100,7 @@ const tenderSchema = new mongoose.Schema(
       },
     },
 
+
     tender_status: {
       type: String,
       enum: ['published', 'accepted', 'completed', 'cancel', 'draft', 'awaiting_for_approval'],
