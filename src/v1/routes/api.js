@@ -12,7 +12,7 @@ const chatRoute = require('./chat.route')
 const filehandlingRoute = require('./filehandling.route')
 const notificationRoute = require('./notification.route')
 const zendeskRoute = require('./zendesk.route')
-
+const ratingReviewRoute = require('./rating.route')
 // End Points of Api
 
 app.use('/admin/', adminRoute)
@@ -28,5 +28,6 @@ app.use('/chat/', chatRoute)
 app.use('/fileupload/', filehandlingRoute)
 app.use('/notification/', notificationRoute)
 app.use('/zendesk/', zendeskRoute)
+app.use('/rating_reviews/', ratingReviewRoute)
 
 module.exports = app

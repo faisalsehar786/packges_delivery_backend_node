@@ -33,13 +33,18 @@ const getChat = async (req, res, next) => {
 
 const getChats = async (req, res, next) => {
   try {
-    const { senderId, recepientId } = req?.query
+    const { senderId, recepientId, tender_id } = req?.query
+    let andCod = []
+    if (tender_id) {
+      andCod.push({ tender_id: tender_id })
+    }
 
     return await getPaginationWithPopulate({
       req,
       res,
       model: chatModel,
       findOptions: {
+        $and: andCod.length > 0 ? andCod : [{}],
         $or: [
           { senderId: senderId, recepientId: recepientId },
           { senderId: recepientId, recepientId: senderId },
