@@ -1,14 +1,14 @@
 const mongoose = require('mongoose')
 const mongooseDelete = require('mongoose-delete')
 
-const errorMessageSchema = new mongoose.Schema(
+const ratingReviewSchema = new mongoose.Schema(
   {
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
-    error_message: { type: String },
-    route: { type: String },
+    text: { type: String },
+    rating: { type: Number, default: 0 },
   },
   {
     timestamps: {
@@ -17,6 +17,6 @@ const errorMessageSchema = new mongoose.Schema(
     },
   }
 )
-errorMessageSchema.plugin(mongooseDelete, { overrideMethods: 'all' })
+ratingReviewSchema.plugin(mongooseDelete, { overrideMethods: 'all' })
 
-module.exports = mongoose.model('ErrorMessage', errorMessageSchema)
+module.exports = mongoose.model('RatingReview', ratingReviewSchema)
