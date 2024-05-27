@@ -12,6 +12,7 @@ const {
   getItemWithPopulate,
   updateItem,
   createItem,
+  createItemNotificationWithPush,
   getFilterOptions,
   createItemReturnData,
   updateItemReturnData,
@@ -92,10 +93,25 @@ const createDriverReuest = async (req, res, next) => {
     const { tender_id, customer_id, driver_id } = req.body
     const check = await TenderModel.findOne({
       _id: tender_id,
-      tender_status: 'accepted',
     })
 
     if (check) {
+      await createItemNotificationWithPush({
+        itemDetails: {
+          sender_id: req.user.id,
+          receiver_id: check?.customer_id,
+          noti_type: 'tender',
+          noti_for: 'for_app',
+          data_id: check?._id,
+          title: `Sjåførforespørsel om forsendelse ${check?.title} `,
+          message: 'Sjåførtilbud for plukkeforsendelse. For detaljer, se forsendelsesdetaljene',
+        },
+        pushNotification: true,
+        insertInDb: true,
+      })
+    }
+
+    if (check?.tender_status == 'accepted') {
       return apiResponse.successResponseWithData(
         res,
         'Oppretting vellykket.',

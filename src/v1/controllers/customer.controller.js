@@ -4,7 +4,10 @@ const PaymentModal = require('../models/payment.model')
 const { slugify } = require('../../../utils/customfunctions')
 const apiResponse = require('../../../helpers/apiResponse')
 const { v1: uuidv1, v4: uuidv4 } = require('uuid')
-const { updateItemReturnData } = require('../../../helpers/commonApis')
+const {
+  updateItemReturnData,
+  createItemNotificationWithPush,
+} = require('../../../helpers/commonApis')
 
 const acceptDriverRequestForTender = async (req, res, next) => {
   try {
@@ -23,7 +26,7 @@ const acceptDriverRequestForTender = async (req, res, next) => {
     })
 
     if (updateRecord) {
-      await updateItemReturnData({
+      const updatedObject = await updateItemReturnData({
         Model: TenderModel,
         cond: {
           _id: updateRecord?.tender_id,
@@ -35,6 +38,21 @@ const acceptDriverRequestForTender = async (req, res, next) => {
         req,
         res,
       })
+      if (updatedObject) {
+        await createItemNotificationWithPush({
+          itemDetails: {
+            sender_id: req.user.id,
+            receiver_id: updatedObject?.driver_id,
+            noti_type: 'tender',
+            noti_for: 'for_app',
+            data_id: updatedObject?._id,
+            title: `Gratulerer Kunden Godta tilbudet ditt mot forsendelse ${updatedObject?.title} `,
+            message: 'For mer informasjon, besøk forsendelsen',
+          },
+          pushNotification: true,
+          insertInDb: true,
+        })
+      }
       await updateItemReturnData({
         Model: PaymentModal,
         cond: {
@@ -75,11 +93,9 @@ const acceptDriverRequestForTender = async (req, res, next) => {
     //   pushNotification: true,
     // })
 
-
     return apiResponse.successResponseWithData(res, 'oppdatert', `Record updated Successfully`, {
       status: 'accepted',
     })
-
   } catch (err) {
     next(err)
   }
