@@ -24,9 +24,9 @@ const notificationSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
-    data_object: {
-      type: [Object],
-      blackbox: true,
+    data_id: {
+      type: String,
+      default: '',
     },
 
     read: { type: Boolean, default: false },

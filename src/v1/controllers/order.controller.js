@@ -135,17 +135,22 @@ const changeOrderStatusByNo = async (req, res, next) => {
       res,
     })
     if (updateRecord) {
-      // await createItemNotificationWithPush({
-      //   itemDetails: {
-      //     sender_id: req.user.id,
-      //     receiver_id: item?.receiver_id,
-      //     noti_type: item?.notiType,
-      //     noti_for: item?.noti_for,
-      //     title: item?.title,
-      //     message: item?.message,
-      //   },
-      //   pushNotification: true,
-      // })
+      if (req?.body?.order_status == 'processing') {
+        await createItemNotificationWithPush({
+          itemDetails: {
+            sender_id: req.user.id,
+            receiver_id: updateRecord?.customer_id,
+            noti_type: 'tender',
+            noti_for: 'for_app',
+            data_id: updateRecord?._id,
+            title: `Forsendelse :${updateRecord?.title} er under prosess eller på vei`,
+            message:
+              'Denne forsendelsen er under behandling eller på vei fra sjåførsiden. Hold kontakten med sjåføren',
+          },
+          insertInDb: true,
+          pushNotification: true,
+        })
+      }
 
       return apiResponse.successResponseWithData(
         res,
@@ -238,29 +243,22 @@ const completeOrderByNo = async (req, res, next) => {
         req,
         res,
       })
-      // await createItemNotificationWithPush({
-      //   itemDetails: {
-      //     sender_id: req.user.id,
-      //     receiver_id: item?.receiver_id,
-      //     noti_type: item?.notiType,
-      //     noti_for: item?.noti_for,
-      //     title: item?.title,
-      //     message: item?.message,
-      //   },
-      //   pushNotification: true,
-      // })
+
       if (updateRecord) {
-        // await createItemNotificationWithPush({
-        //   itemDetails: {
-        //     sender_id: req.user.id,
-        //     receiver_id: item?.receiver_id,
-        //     noti_type: item?.notiType,
-        //     noti_for: item?.noti_for,
-        //     title: item?.title,
-        //     message: item?.message,
-        //   },
-        //   pushNotification: true,
-        // })
+        await createItemNotificationWithPush({
+          itemDetails: {
+            sender_id: req.user.id,
+            receiver_id: updateRecord?.customer_id,
+            noti_type: 'tender',
+            noti_for: 'for_app',
+            data_id: updateRecord?._id,
+            title: `Forsendelse :${updateRecord?.title} venter på godkjenning`,
+            message:
+              'Denne forsendelsen er fullført fra førersiden og venter nå på din bekreftelse',
+          },
+          insertInDb: true,
+          pushNotification: true,
+        })
         await TenderModel.findOneAndUpdate(
           {
             _id: updateRecord?._id,
@@ -268,9 +266,7 @@ const completeOrderByNo = async (req, res, next) => {
           },
           {
             $set: {
-
               'order_awarded.$.order_awarded_status': 'awaiting_for_approval',
-
             },
           },
           { new: true }
@@ -303,17 +299,19 @@ const completeOrderByNo = async (req, res, next) => {
       })
 
       if (updateRecord) {
-        // await createItemNotificationWithPush({
-        //   itemDetails: {
-        //     sender_id: req.user.id,
-        //     receiver_id: item?.receiver_id,
-        //     noti_type: item?.notiType,
-        //     noti_for: item?.noti_for,
-        //     title: item?.title,
-        //     message: item?.message,
-        //   },
-        //   pushNotification: true,
-        // })
+        await createItemNotificationWithPush({
+          itemDetails: {
+            sender_id: req.user.id,
+            receiver_id: updateRecord?.driver_id,
+            noti_type: 'tender',
+            noti_for: 'for_app',
+            data_id: updateRecord?._id,
+            title: `Forsendelse :${updateRecord?.title} er levert og godkjent av kunden vellykket`,
+            message: 'Denne forsendelsen er levert og godkjent av kunden',
+          },
+          insertInDb: true,
+          pushNotification: true,
+        })
         await TenderModel.findOneAndUpdate(
           {
             _id: updateRecord?._id,
