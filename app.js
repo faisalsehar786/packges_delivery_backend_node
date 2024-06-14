@@ -17,7 +17,7 @@ const { sanitize } = require('./middlewares/sanitizerMiddleware')
 const app = express()
 
 // Apply the rate limiting middleware to all requests
-app.use(rateLimiter)
+// app.use(rateLimiter)
 
 app.disable('x-powered-by')
 
