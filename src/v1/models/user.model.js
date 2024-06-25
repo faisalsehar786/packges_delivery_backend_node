@@ -14,7 +14,6 @@ const userSchema = new mongoose.Schema(
     },
     active_role: {
       type: String,
-      enum: ['driver', 'customer'],
       default: 'customer',
     },
     password: {
@@ -22,7 +21,7 @@ const userSchema = new mongoose.Schema(
     },
     loc_tracking: { type: Boolean, default: false },
     shipments_tracking: { type: Boolean, default: false },
-    radius_in_km: { type: Number, default: 40 },
+    radius_in_km: { type: Number, default: 999 },
 
     mobile_number: { type: String, default: '' },
     rating: {
