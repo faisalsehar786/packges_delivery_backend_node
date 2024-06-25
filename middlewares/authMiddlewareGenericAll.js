@@ -1,6 +1,7 @@
 const parser = require('ua-parser-js')
 const jwt = require('jsonwebtoken')
 // const sslCertificate = require('get-ssl-certificate')
+
 const AdminModel = require('../src/v1/models/admin.model')
 const UserModel = require('../src/v1/models/user.model')
 const apiResponse = require('../helpers/apiResponse')
@@ -9,76 +10,80 @@ const apiResponse = require('../helpers/apiResponse')
 // This function checks the authentication origins.
 const checkAuthOrigins = async (req, res, next) => {
   try {
-    const origin = req.get('origin')
+    // const origin = req.get('origin')
     const ua = parser(req.headers['user-agent'])
 
-    const SecurePathsAdmin = ['http://localhost:3000', 'https://hyhm.netlify.app']
+    // const SecurePathsAdmin = [
+    //   'http://localhost:3012',
+    //   // 'http://localhost:3001',
+    //   'http://localhost:3000',
+    // ]
     /* Check request coming from browser  */
     if (ua.browser.name !== undefined) {
       /* Org Origin and data check  */
-      if (SecurePathsAdmin.includes(origin)) {
-        // if (process.env.NODE_ENV !== 'development') {
-        //   sslCertificate
-        //     .get(origin.replace(/^https?:\/\//i, ''), 250, 443, 'https:')
-        //     .then((certificate) => {
-        //       /* Check and get pub key and convert it to base64 */
-        //       const publicKeyBuffer = Buffer.from(certificate.pubkey, 'base64')
-        //       /* Check if it is actually a buffer or other data */
-        //       if (Buffer.isBuffer(publicKeyBuffer)) {
-        //         if (!(process.env.ADMIN_PUBLIC_KEY === publicKeyBuffer.toString('base64'))) {
-        //           return apiResponse.ProxyError(
-        //             res,
-        //             'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
-        //             'Unauthorized User'
-        //           )
-        //         }
-        //       } else {
-        //         return apiResponse.ProxyError(
-        //           res,
-        //           'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
-        //           'Unauthorized User'
-        //         )
-        //       }
-        //     })
-        //     .catch((error) => {
-        //       logger.log(error)
-        //       return apiResponse.ProxyError(
-        //         res,
-        //         'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
-        //         'Unauthorized User'
-        //       )
-        //     })
-        // }
-        /* Admin Origin and data check  */
-        const { id, token } = await decodeAndVerifyToken(req)
-        const data = await AdminModel.findOne({
-          _id: id,
-          access_token: token,
-        }).select('-password')
-        if (!data) {
-          return apiResponse.unauthorizedResponse(
-            res,
-            'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
-            'Unauthorized User'
-          )
-        }
-        const ip_address = req.header('x-forwarded-for') || req.socket.remoteAddress
-        if (data.ip_address !== ip_address && data.access_token !== token) {
-          return apiResponse.unauthorizedResponse(
-            res,
-            'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
-            'Unauthorized User'
-          )
-        }
-        req.user = data
-        next()
-      } else {
+      // if (SecurePathsAdmin.includes(origin)) {
+      // if (process.env.NODE_ENV !== 'development') {
+      //   sslCertificate
+      //     .get(origin.replace(/^https?:\/\//i, ''), 250, 443, 'https:')
+      //     .then((certificate) => {
+      //       /* Check and get pub key and convert it to base64 */
+      //       const publicKeyBuffer = Buffer.from(certificate.pubkey, 'base64')
+      //       /* Check if it is actually a buffer or other data */
+      //       if (Buffer.isBuffer(publicKeyBuffer)) {
+      //         if (!(process.env.ADMIN_PUBLIC_KEY === publicKeyBuffer.toString('base64'))) {
+      //           return apiResponse.ProxyError(
+      //             res,
+      //             'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
+      //             'Unauthorized User'
+      //           )
+      //         }
+      //       } else {
+      //         return apiResponse.ProxyError(
+      //           res,
+      //           'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
+      //           'Unauthorized User'
+      //         )
+      //       }
+      //     })
+      //     .catch((error) => {
+      //       logger.log(error)
+      //       return apiResponse.ProxyError(
+      //         res,
+      //         'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
+      //         'Unauthorized User'
+      //       )
+      //     })
+      // }
+      /* Admin Origin and data check  */
+      const { id, token } = await decodeAndVerifyToken(req)
+      const data = await AdminModel.findOne({
+        _id: id,
+        access_token: token,
+      }).select('-password')
+      if (!data) {
         return apiResponse.unauthorizedResponse(
           res,
           'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
           'Unauthorized User'
         )
       }
+      const ip_address = req.header('x-forwarded-for') || req.socket.remoteAddress
+      if (data.ip_address !== ip_address && data.access_token !== token) {
+        return apiResponse.unauthorizedResponse(
+          res,
+          'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
+          'Unauthorized User'
+        )
+      }
+      req.user = data
+      next()
+      // } else {
+      //   return apiResponse.unauthorizedResponse(
+      //     res,
+      //     'Uautorisert bruker. Du har ikke nødvendig tilgang til å kunne utføre denne handlingen. ',
+      //     'Unauthorized User'
+      //   )
+      // }
     } else {
       /* Auth check from users model */
       const otherAgentsList = [/Android/, /iPad/, /iOS/, /iPhone/]
