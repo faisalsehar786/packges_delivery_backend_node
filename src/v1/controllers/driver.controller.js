@@ -20,14 +20,13 @@ const {
 
 const driversRequestForTender = async (req, res, next) => {
   try {
-    const user_id = req.user.id
-    const customer_id = req.query.customer_id ? req.query.customer_id : user_id
+    const customer_id = req.query.customer_id ? req.query.customer_id : ''
     const tender_id = req.query.tender_id ? req.query.tender_id : ''
     const term = req?.query?.search ? req?.query?.search : ''
     const status = req?.query?.status ? req?.query?.status : 'all'
     const filter = getFilterOptions(req)
 
-    let andCod = [{ customer_id: customer_id }]
+    let andCod = []
     let orCod = []
 
     if (term) {
