@@ -13,6 +13,7 @@ const paymentSchema = new mongoose.Schema(
     tax: { type: Number, default: 0 },
     customer_share_amount: { type: Number, default: 0 },
     driver_share_amount: { type: Number, default: 0 },
+    platfrom_share_amount: { type: Number, default: 0 },
     platfrom_share: {
       platfrom_name: {
         type: String,
@@ -36,7 +37,7 @@ const paymentSchema = new mongoose.Schema(
     charge_date: { type: Date, default: Date.now },
     status: {
       type: String,
-      enum: ['awaiting_for_payment', 'completed', 'cancel'],
+      enum: ['awaiting_for_payment', 'completed', 'cancel', 'fail'],
       default: 'awaiting_for_payment',
     },
     approved: {

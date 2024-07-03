@@ -178,20 +178,6 @@ const updatePayment = async (req, res, next) => {
       )
     }
 
-    // if (req.body?.status == 'completed') {
-    //   await updateItemReturnData({
-    //     Model: TenderModel,
-    //     cond: {
-    //       _id: resp?.tender_id,
-    //     },
-    //     updateobject: {
-    //       'order.order_status': 'payment_done',
-    //     },
-    //     req,
-    //     res,
-    //   })
-    // }
-
     return apiResponse.successResponseWithData(
       res,
       'oppdatert',

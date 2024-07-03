@@ -21,12 +21,7 @@ const createTender = async (req, res, next) => {
     const images = req?.files?.map((item) => ({ path: item?.location }))
     req.body.files = images?.length > 0 ? images : []
   }
-  console.log(req?.body)
-  // return apiResponse.ErrorResponse(
-  //   res,
-  //   'Du har ikke tilgang til å oppdatere andre brukeres data',
-  //   "You are not allowed to update other user's data"
-  // )
+
   req.body.slug = slugify(req?.body?.title)
   req.body.customer_id = req?.user?.id
   req.body.order = {
@@ -56,6 +51,26 @@ const createTender = async (req, res, next) => {
         req,
         res,
       })
+
+      const createdItem = new PaymentModal()
+      createdItem.tender_id = status?._id
+      createdItem.order_no = status?.order.order_no
+      createdItem.customer_id = status?.customer_id
+      createdItem.driver_id = null
+      createdItem.paid_price = status?.total_price
+      createdItem.driver_share_amount = 0
+      createdItem.customer_share_amount = 0
+      createdItem.platfrom_share_amount = 0
+      createdItem.payment_method = 'Dintero'
+      createdItem.platfrom_share = {
+        platfrom_name: 'Dintero',
+        name: '',
+        email: '',
+        phone: '',
+        share_amount: 0,
+      }
+      createdItem.save()
+
       return apiResponse.successResponseWithData(
         res,
         'Oppretting vellykket.',
