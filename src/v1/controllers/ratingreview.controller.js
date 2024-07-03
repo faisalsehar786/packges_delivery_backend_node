@@ -21,7 +21,8 @@ const createRating = async (req, res, next) => {
         totalRating += r.rating
       })
       const avgRating = totalRating / ratings.length
-      // const totalRatingOutOf5 = avgRating / 5
+      const floatNumber = avgRating
+      const truncatedNumber = Math.floor(floatNumber * 10) / 10
 
       await updateItemReturnData({
         Model: UserModal,
@@ -29,7 +30,7 @@ const createRating = async (req, res, next) => {
           _id: user_id,
         },
         updateobject: {
-          rating: avgRating,
+          rating: truncatedNumber > 5 ? 5 : truncatedNumber,
         },
         req,
         res,
