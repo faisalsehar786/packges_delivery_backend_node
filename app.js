@@ -9,15 +9,14 @@ const cors = require('cors')
 const socketIo = require('socket.io')
 const http = require('http')
 const chatModel = require('./src/v1/models/chat.model')
-
 const { rateLimiter } = require('./middlewares/rateLimiter')
 const { sanitize } = require('./middlewares/sanitizerMiddleware')
-// const errorMesageMiddleware = require("./helpers/error.helper");
+const errorMesageMiddleware = require('./helpers/error.helper')
 
 const app = express()
 
 // Apply the rate limiting middleware to all requests
-// app.use(rateLimiter)
+app.use(rateLimiter)
 
 app.disable('x-powered-by')
 
@@ -72,27 +71,25 @@ app.use('/', indexRouter)
 app.use('/api/v1/', apiRouter)
 
 app.all('*', (req, res) => apiResponse.notFoundResponse(res, 'Rute ikke funnet', 'Route not found'))
-
 // eslint-disable-next-line no-unused-vars
-// app.use((err, req, res, next) => {
+app.use((err, req, res, next) => {
+  // Send an appropriate error response
+  const statusCode = err.status || 500
+  const message = err.message || 'Internal Server Error'
 
-//   // Send an appropriate error response
-//   // const statusCode = err.status || 500;
-//   // const message = err.message || "Internal Server Error";
-//   if (req.user?.organisation_id) {
-//     errorMesageMiddleware.createErrorMessage(
-//       err.message,
-//       req.user?._id,
-//       req._reconstructedRoute
-//     );
-//   }
+  errorMesageMiddleware.createErrorMessage(
+    message,
+    req.user?._id,
+    req._reconstructedRoute,
+    statusCode
+  )
 
-//   return apiResponse.ErrorResponse(
-//     res,
-//     "Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.",
-//     "Something went wrong, Kindly try again later"
-//   );
-// });
+  return apiResponse.ErrorResponse(
+    res,
+    'Beklager, det oppstod en systemfeil. Vennligst prøv igjen senere.',
+    'Something went wrong, Kindly try again later'
+  )
+})
 
 const server = http.createServer(app)
 const io = socketIo(server)

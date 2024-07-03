@@ -7,6 +7,7 @@ const ratingReviewSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
+    tender_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Tender', default: null },
     text: { type: String },
     rating: { type: Number, default: 0 },
   },

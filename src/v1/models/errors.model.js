@@ -9,6 +9,7 @@ const errorMessageSchema = new mongoose.Schema(
     },
     error_message: { type: String },
     route: { type: String },
+    status: { type: String },
   },
   {
     timestamps: {

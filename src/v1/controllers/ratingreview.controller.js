@@ -1,7 +1,11 @@
 const RatingReview = require('../models/ratingReview.model')
 const UserModal = require('../models/user.model')
 const apiResponse = require('../../../helpers/apiResponse')
-const { createItemReturnData, updateItemReturnData } = require('../../../helpers/commonApis')
+const {
+  createItemReturnData,
+  updateItemReturnData,
+  getPaginationWithPopulate,
+} = require('../../../helpers/commonApis')
 
 const createRating = async (req, res, next) => {
   const user_id = req?.body?.driver_id
@@ -54,4 +58,22 @@ const createRating = async (req, res, next) => {
   }
 }
 
-module.exports = { createRating }
+const getRatingOfTender = async (req, res, next) => {
+  try {
+    const itemId = req.params.tender_id
+
+    return await getPaginationWithPopulate({
+      req,
+      res,
+      model: RatingReview,
+      findOptions: {
+        $and: [{ tender_id: itemId, user_id: req.user.id }],
+      },
+
+      populateObject: [],
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+module.exports = { createRating, getRatingOfTender }

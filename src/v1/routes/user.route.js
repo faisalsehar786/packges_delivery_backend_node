@@ -7,7 +7,6 @@ const { checkUserAuth } = require('../../../middlewares/authMiddleware')
 const { checkAuthOrigins } = require('../../../middlewares/authMiddlewareGenericAll')
 const { checkAdminUserAuth } = require('../../../middlewares/authMiddlewareAdminPanel')
 
-const Roles = require('../../../utils/roles')
 const { passwordValidation, validateRequest } = require('./authValidation/authValidation')
 
 router.get('/get_all', checkAdminUserAuth, userController.getUsers)
