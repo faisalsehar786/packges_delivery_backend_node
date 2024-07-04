@@ -98,6 +98,7 @@ io.on('connection', (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`)
 
   socket.on('new-user-add', async (newUserId) => {
+    console.log(newUserId)
     if (!onlineUsers.some((user) => user?.userId === newUserId)) {
       // if user is not added before
       onlineUsers.push({ userId: newUserId, socketId: socket?.id })
@@ -146,7 +147,6 @@ io.on('connection', (socket) => {
     })
 
     if (dataRes) {
-      console.log(dataRes)
       const unreadChatCount = await chatModel.count({
         $and: [{ recepientId: recepientId, read: false }],
       })
