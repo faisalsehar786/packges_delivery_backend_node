@@ -326,6 +326,7 @@ const completeOrderByNo = async (req, res, next) => {
         )
 
         await PaymentModal.updateMany(
+          { customer_id: updateRecord?.customer_id },
           { tender_id: updateRecord?._id },
           { $set: { approved: 'done' } }
         )
