@@ -35,7 +35,7 @@ module.exports.sendEmail = (toEmail, emailSubject, emailBody) => {
       from: { name: 'HYHM', email: 'tech@hmhy.no' },
       subject: emailSubject,
       text: emailBody,
-      html: `<img src="https://hyhm.netlify.app/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
+      html: `<img src="https://packges-delivery-react-panel.vercel.app/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
     })
     .then(
       () => {},
