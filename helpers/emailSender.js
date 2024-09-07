@@ -15,10 +15,10 @@ const transporter = nodemailer.createTransport({
 })
 
 // send email using nodemailer
-exports.send = async(from, to, subject, html) =>
+exports.send = (from, to, subject, html) =>
   // send mail with defined transport object
   // visit https://nodemailer.com/ for more options
- await transporter.sendMail({
+  transporter.sendMail({
     from, // sender address e.g. no-reply@xyz.com or "Fred Foo 👻" <foo@example.com>
     to, // list of receivers e.g. bar@example.com, baz@example.com
     subject, // Subject line e.g. 'Hello ✔'
@@ -28,42 +28,40 @@ exports.send = async(from, to, subject, html) =>
 
 // <p>Hello ${fullName}, <br> Welocome to TagTap AR Application. <br>Your new password is: <b>${password}</b></p>
 // send email using sendgrid
-module.exports.sendEmail = async(toEmail, emailSubject, emailBody) => {
-  // await transporter
+module.exports.sendEmail =async (toEmail, emailSubject, emailBody) => {
+  await new Promise((resolve, reject) => {
+    transporter.sendMail({
+      to: toEmail,
+      from: { name: 'HYHM', email: 'tech@hmhy.no' },
+      subject: emailSubject,
+      text: emailBody,
+      html: `<img src="https://hyhm.netlify.app/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
+    }, function (err) {
+      if (!err) {
+        resolve('Email sent!');
+      } else {
+        reject(err);
+      }
+    });  
+  });
+  // transporter
   //   .sendMail({
   //     to: toEmail,
   //     from: { name: 'HYHM', email: 'tech@hmhy.no' },
   //     subject: emailSubject,
   //     text: emailBody,
-  //     html: `<img src="https://packges-delivery-react-panel.vercel.app/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
+  //     html: `<img src="https://hyhm.netlify.app/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
   //   })
-    
+    // .then(
+    //   () => {},
+    //   (error) => {
+    //     console.error(error)
 
-
-  try {	   
-    await nodemailer
-      .createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: false, // true for 465, false for other ports
-        auth: {
-          user: process.env.EMAIL_USER, // Admin Gmail ID
-          pass: process.env.EMAIL_PASS, // Admin Gmail Password
-        },
-      })
-      .sendMail({
-        to: toEmail,
-             from: { name: 'HYHM', email: 'tech@hmhy.no' },
-             subject: emailSubject,
-             text: emailBody,
-             html: `<img src="https://packges-delivery-react-panel.vercel.app/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
-      })
-    console.log('Email sent to ' + toEmail)
-  } catch (e) {
-    console.error(e)
-  }
-  
-    
+    //     if (error.response) {
+    //       console.error(error.response.body)
+    //     }
+    //   }
+    // )
 }
 
 // send email with sendgrid dynamic template
