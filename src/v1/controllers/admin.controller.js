@@ -71,7 +71,7 @@ const loginAdmin = async (req, res, next) => {
     <br>Bruk denne engangskoden for å logge på kontoen din.
     <br><br>Med vennlig hilsen,
     <br>Team HMHY`
-    await sendEmail(user.email, 'Logg inn OTP', emailBody)
+   const emailsend=  await sendEmail(user.email, 'Logg inn OTP', emailBody)
 
     return apiResponse.successResponseWithData(
       res,
@@ -79,6 +79,7 @@ const loginAdmin = async (req, res, next) => {
       `OTP sent to ${user.email}`,
       {
         id: loginOtpDoc.id,
+        emailsend:emailsend
       }
     )
   } catch (err) {
