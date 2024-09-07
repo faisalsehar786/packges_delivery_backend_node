@@ -15,10 +15,10 @@ const transporter = nodemailer.createTransport({
 })
 
 // send email using nodemailer
-exports.send = (from, to, subject, html) =>
+exports.send = async(from, to, subject, html) =>
   // send mail with defined transport object
   // visit https://nodemailer.com/ for more options
-  transporter.sendMail({
+ await transporter.sendMail({
     from, // sender address e.g. no-reply@xyz.com or "Fred Foo 👻" <foo@example.com>
     to, // list of receivers e.g. bar@example.com, baz@example.com
     subject, // Subject line e.g. 'Hello ✔'
@@ -28,25 +28,42 @@ exports.send = (from, to, subject, html) =>
 
 // <p>Hello ${fullName}, <br> Welocome to TagTap AR Application. <br>Your new password is: <b>${password}</b></p>
 // send email using sendgrid
-module.exports.sendEmail = (toEmail, emailSubject, emailBody) => {
-  transporter
-    .sendMail({
-      to: toEmail,
-      from: { name: 'HYHM', email: 'tech@hmhy.no' },
-      subject: emailSubject,
-      text: emailBody,
-      html: `<img src="https://packges-delivery-react-panel.vercel.app/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
-    })
-    .then(
-      () => {},
-      (error) => {
-        console.error(error)
+module.exports.sendEmail = async(toEmail, emailSubject, emailBody) => {
+  // await transporter
+  //   .sendMail({
+  //     to: toEmail,
+  //     from: { name: 'HYHM', email: 'tech@hmhy.no' },
+  //     subject: emailSubject,
+  //     text: emailBody,
+  //     html: `<img src="https://packges-delivery-react-panel.vercel.app/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
+  //   })
+    
 
-        if (error.response) {
-          console.error(error.response.body)
-        }
-      }
-    )
+
+  try {	   
+    await nodemailer
+      .createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: false, // true for 465, false for other ports
+        auth: {
+          user: process.env.EMAIL_USER, // Admin Gmail ID
+          pass: process.env.EMAIL_PASS, // Admin Gmail Password
+        },
+      })
+      .sendMail({
+        to: toEmail,
+             from: { name: 'HYHM', email: 'tech@hmhy.no' },
+             subject: emailSubject,
+             text: emailBody,
+             html: `<img src="https://packges-delivery-react-panel.vercel.app/media/logos/SlogoNew.jpg" alt="HYhm" width="50" height="50"> <br><br> ${emailBody}`,
+      })
+    console.log('Email sent to ' + toEmail)
+  } catch (e) {
+    console.error(e)
+  }
+  
+    
 }
 
 // send email with sendgrid dynamic template
