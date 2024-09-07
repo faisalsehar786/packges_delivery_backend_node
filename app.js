@@ -54,9 +54,13 @@ app.use(sanitize)
 app.use('/public', express.static(path.join(__dirname, 'public')))
 
 const corsConfig = {
-  credentials: true,
-  origin: true,
-  exposedHeaders: ['Authorization'],
+  // credentials: true,
+  // origin: true,
+  // exposedHeaders: ['Authorization'],
+  origin: '*', // Allow all origins (you can restrict this for security)
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+
 }
 app.use(cors(corsConfig))
 
@@ -91,6 +95,8 @@ app.use((err, req, res, next) => {
   )
 })
 
+
+// its socket io code its dynamci
 const server = http.createServer(app)
 const io = socketIo(server)
 let onlineUsers = []
