@@ -8,9 +8,6 @@
     "Faisal Abbas <faisalsehar786@gmail.com>"
   ],
   "main": "app.js",
-  "engines": {
-    "node": "16.16.0"
-  },
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js"
