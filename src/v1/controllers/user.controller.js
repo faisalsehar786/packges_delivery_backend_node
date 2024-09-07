@@ -913,7 +913,6 @@ const changeUserFrontEndUserPassword = async (req, res, next) => {
 }
 
 const getDetailProfileStatsData = async (req, res, next) => {
-  const role = req?.query?.role ? req?.query?.role : 'customer'
   const userId = req?.query?.user_id ? req?.query?.user_id : req?.user?.id
 
   if (!userId) {
@@ -925,22 +924,31 @@ const getDetailProfileStatsData = async (req, res, next) => {
     )
   }
 
-  /////// customer stats
-  const aggregateCondition1 = [
+  const aggregateCondition = [
     {
       $match:
         /**
-         * query: The query in MQL.
+         * query: The query in MQL.Customer
          */
         {
           $and: [
+            {
+              deleted: false,
+            },
+          ],
+          $or: [
+            {
+              'order_awarded.awarded_to_driver': new ObjectId(userId),
+            },
+            {
+              driver_id: new ObjectId(userId),
+            },
             {
               customer_id: new ObjectId(userId),
             },
           ],
         },
     },
-
     {
       $lookup:
         /**
@@ -956,306 +964,6 @@ const getDetailProfileStatsData = async (req, res, next) => {
           localField: 'customer_id',
           foreignField: 'customer_id',
           as: 'customer_payments',
-        },
-    },
-    {
-      $addFields:
-        /**
-         * newField: The new field name.
-         * expression: The new field expression.
-         */
-        {
-          customer_payment_completed_array: {
-            $filter: {
-              input: '$customer_payments',
-              as: 'payment',
-              cond: {
-                $and: [
-                  {
-                    $eq: ['$$payment.status', 'completed'],
-                  },
-                ],
-              },
-            },
-          },
-        },
-    },
-    {
-      $addFields:
-        /**
-         * newField: The new field name.
-         * expression: The new field expression.
-         */
-        {
-          customer_awaiting_for_payment_array: {
-            $filter: {
-              input: '$customer_payments',
-              as: 'payment',
-              cond: {
-                $and: [
-                  {
-                    $eq: ['$$payment.status', 'awaiting_for_payment'],
-                  },
-                ],
-              },
-            },
-          },
-        },
-    },
-    {
-      $addFields:
-        /**
-         * newField: The new field name.
-         * expression: The new field expression.
-         */
-        {
-          customer_payment_cancel_array: {
-            $filter: {
-              input: '$customer_payments',
-              as: 'payment',
-              cond: {
-                $and: [
-                  {
-                    $eq: ['$$payment.status', 'cancel'],
-                  },
-                ],
-              },
-            },
-          },
-        },
-    },
-    {
-      $addFields:
-        /**
-         * newField: The new field name.
-         * expression: The new field expression.
-         */
-        {
-          customer_payment_done_amount: {
-            $sum: '$customer_payment_completed_array.paid_price',
-          },
-        },
-    },
-    {
-      $addFields:
-        /**
-         * newField: The new field name.
-         * expression: The new field expression.
-         */
-        {
-          customer_payment_pending_amount: {
-            $sum: '$customer_awaiting_for_payment_array.paid_price',
-          },
-        },
-    },
-    {
-      $addFields:
-        /**
-         * newField: The new field name.
-         * expression: The new field expression.
-         */
-        {
-          customer_payment_cancel_amount: {
-            $sum: '$customer_payment_cancel_array.paid_price',
-          },
-        },
-    },
-    {
-      $addFields:
-        /**
-         * newField: The new field name.
-         * expression: The new field expression.
-         */
-        {
-          customer_payment_share_amount: {
-            $sum: '$customer_payment_completed_array.customer_share_amount',
-          },
-        },
-    },
-    {
-      $group: {
-        _id: 'stats',
-        total: {
-          $sum: 1,
-        },
-        total_price: {
-          $sum: '$total_price',
-        },
-        order_completed_price: {
-          $first: '$customer_payment_done_amount',
-        },
-        tender_published: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$tender_status', 'published'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        tender_accepted: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$tender_status', 'accepted'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        order_awaiting_for_payment: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'awaiting_for_payment'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        order_payment_done: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'payment_done'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        order_processing: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'processing'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        order_on_the_way: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'on_the_way'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        order_completed: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'completed'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        order_cancel: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'cancel'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        customer_payment_done_amount: {
-          $first: '$customer_payment_done_amount',
-        },
-        customer_payment_pending_amount: {
-          $first: '$customer_payment_pending_amount',
-        },
-        customer_payment_cancel_amount: {
-          $first: '$customer_payment_cancel_amount',
-        },
-        customer_payment_share_amount: {
-          $first: '$customer_payment_share_amount',
-        },
-      },
-    },
-  ]
-
-  ///////driver Stats//////////////
-
-  const aggregateCondition2 = [
-    {
-      $match:
-        /**
-         * query: The query in MQL.
-         */
-        {
-          $or: [
-            {
-              driver_id: new ObjectId(userId),
-            },
-          ],
-        },
-    },
-    {
-      $addFields:
-        /**
-         * newField: The new field name.
-         * expression: The new field expression.
-         */
-        {
-          driver_order_completed: {
-            $size: {
-              $filter: {
-                input: '$order_awarded',
-                as: 'orderAwarded',
-                cond: {
-                  $and: [
-                    {
-                      $eq: ['$$orderAwarded.order_awarded_status', 'completed'],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-          driver_order_cancel: {
-            $size: {
-              $filter: {
-                input: '$order_awarded',
-                as: 'orderAwarded',
-                cond: {
-                  $and: [
-                    {
-                      $eq: ['$$orderAwarded.order_awarded_status', 'cancel'],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-          driver_order_accepted: {
-            $size: {
-              $filter: {
-                input: '$order_awarded',
-                as: 'orderAwarded',
-                cond: {
-                  $and: [
-                    {
-                      $eq: ['$$orderAwarded.order_awarded_status', 'accepted'],
-                    },
-                  ],
-                },
-              },
-            },
-          },
         },
     },
     {
@@ -1282,30 +990,146 @@ const getDetailProfileStatsData = async (req, res, next) => {
          * expression: The new field expression.
          */
         {
-          driver_total_earning_array: {
-            $filter: {
-              input: '$driver_payments',
-              as: 'payment',
-              cond: {
-                $and: [
-                  {
-                    $eq: ['$$payment.status', 'completed'],
-                  },
-                ],
+          driver_total_paid_count: {
+            $size: {
+              $filter: {
+                input: '$driver_payments',
+                as: 'driverpayment',
+                cond: {
+                  $and: [
+                    {
+                      $eq: ['$$driverpayment.status', 'completed'],
+                    },
+                    {
+                      $eq: ['$$driverpayment.driver_id', new ObjectId(userId)],
+                    },
+                  ],
+                },
               },
             },
           },
-        },
-    },
-    {
-      $addFields:
-        /**
-         * newField: The new field name.
-         * expression: The new field expression.
-         */
-        {
+          driver_total_unpaid_count: {
+            $size: {
+              $filter: {
+                input: '$driver_payments',
+                as: 'driverpayment',
+                cond: {
+                  $and: [
+                    {
+                      $eq: ['$$driverpayment.status', 'awaiting_for_payment'],
+                    },
+                    {
+                      $eq: ['$$driverpayment.driver_id', new ObjectId(userId)],
+                    },
+                  ],
+                },
+              },
+            },
+          },
           driver_total_earning: {
-            $sum: '$driver_total_earning_array.driver_share_amount',
+            $sum: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: '$driver_payments',
+                    as: 'driverpayment',
+                    cond: {
+                      $and: [
+                        {
+                          $eq: ['$$driverpayment.status', 'completed'],
+                        },
+                        {
+                          $eq: ['$$driverpayment.driver_id', new ObjectId(userId)],
+                        },
+                      ],
+                    },
+                  },
+                },
+                in: '$$this.driver_share_amount',
+              },
+            },
+          },
+          customer_total_payment_paid: {
+            $sum: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: '$customer_payments',
+                    as: 'payment',
+                    cond: {
+                      $and: [
+                        {
+                          $eq: ['$$payment.status', 'completed'],
+                        },
+                        {
+                          $eq: ['$$payment.customer_id', new ObjectId(userId)],
+                        },
+                      ],
+                    },
+                  },
+                },
+                in: '$$this.paid_price',
+              },
+            },
+          },
+          customer_total_payment_unpaid: {
+            $sum: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: '$customer_payments',
+                    as: 'payment',
+                    cond: {
+                      $and: [
+                        {
+                          $eq: ['$$payment.status', 'awaiting_for_payment'],
+                        },
+                        {
+                          $eq: ['$$payment.customer_id', new ObjectId(userId)],
+                        },
+                      ],
+                    },
+                  },
+                },
+                in: '$$this.paid_price',
+              },
+            },
+          },
+          customer_total_paid_count: {
+            $size: {
+              $filter: {
+                input: '$customer_payments',
+                as: 'payment',
+                cond: {
+                  $and: [
+                    {
+                      $eq: ['$$payment.status', 'completed'],
+                    },
+                    {
+                      $eq: ['$$payment.customer_id', new ObjectId(userId)],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          customer_total_unpaid_count: {
+            $size: {
+              $filter: {
+                input: '$customer_payments',
+                as: 'payment',
+                cond: {
+                  $and: [
+                    {
+                      $eq: ['$$payment.status', 'awaiting_for_payment'],
+                    },
+                    {
+                      $eq: ['$$payment.customer_id', new ObjectId(userId)],
+                    },
+                  ],
+                },
+              },
+            },
           },
         },
     },
@@ -1315,154 +1139,395 @@ const getDetailProfileStatsData = async (req, res, next) => {
         total: {
           $sum: 1,
         },
-        total_price: {
-          $sum: '$total_price',
-        },
-        tender_published: {
+        driver_assigned_tender: {
           $sum: {
             $cond: [
               {
-                $eq: ['$tender_status', 'published'],
+                $eq: ['$driver_id', new ObjectId(userId)],
               },
               1,
               0,
             ],
           },
         },
-        tender_accepted: {
+        driver_active_tender: {
           $sum: {
-            $cond: [
-              {
-                $eq: ['$tender_status', 'accepted'],
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'processing'],
+                      },
+                      {
+                        $eq: ['$tender_status', 'accepted'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$driver_id', new ObjectId(userId)],
+                  },
+                ],
               },
-              1,
-              0,
-            ],
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
           },
         },
-        order_awaiting_for_payment: {
+
+        driver_order_awaiting_for_payment: {
+          $first: '$driver_total_unpaid_count',
+        },
+        driver_order_payment_done: {
+          $first: '$driver_total_paid_count',
+        },
+        driver_order_processing: {
           $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'awaiting_for_payment'],
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'processing'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$driver_id', new ObjectId(userId)],
+                  },
+                ],
               },
-              1,
-              0,
-            ],
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
           },
         },
-        order_payment_done: {
+
+        driver_order_on_the_way: {
           $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'payment_done'],
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'on_the_way'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$driver_id', new ObjectId(userId)],
+                  },
+                ],
               },
-              1,
-              0,
-            ],
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
           },
         },
-        order_processing: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'processing'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        order_on_the_way: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'on_the_way'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        order_completed: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'completed'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        order_cancel: {
-          $sum: {
-            $cond: [
-              {
-                $eq: ['$order.order_status', 'cancel'],
-              },
-              1,
-              0,
-            ],
-          },
-        },
+
         driver_order_completed: {
-          $sum: '$driver_order_completed',
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'completed'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$driver_id', new ObjectId(userId)],
+                  },
+                ],
+              },
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
+          },
         },
+
+        driver_awaiting_for_approval: {
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'awaiting_for_approval'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$driver_id', new ObjectId(userId)],
+                  },
+                ],
+              },
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
+          },
+        },
+
         driver_order_cancel: {
-          $sum: '$driver_order_cancel',
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'cancel'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$driver_id', new ObjectId(userId)],
+                  },
+                ],
+              },
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
+          },
         },
-        driver_order_accepted: {
-          $sum: '$driver_order_accepted',
+
+        ////////////////////////////
+        cutsomer_published_tender: {
+          $sum: {
+            $cond: [
+              {
+                $eq: ['$customer_id', new ObjectId(userId)],
+              },
+              1,
+              0,
+            ],
+          },
         },
+        customer_active_tender: {
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'processing'],
+                      },
+                      {
+                        $eq: ['$tender_status', 'accepted'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$customer_id', new ObjectId(userId)],
+                  },
+                ],
+              },
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
+          },
+        },
+
+        customer_order_awaiting_for_payment: {
+          $first: '$customer_total_unpaid_count',
+        },
+        customer_order_payment_done: {
+          $first: '$customer_total_paid_count',
+        },
+        customer_order_processing: {
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'processing'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$customer_id', new ObjectId(userId)],
+                  },
+                ],
+              },
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
+          },
+        },
+
+        customer_order_on_the_way: {
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'on_the_way'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$customer_id', new ObjectId(userId)],
+                  },
+                ],
+              },
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
+          },
+        },
+
+        customer_order_completed: {
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'completed'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$customer_id', new ObjectId(userId)],
+                  },
+                ],
+              },
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
+          },
+        },
+
+        customer_awaiting_for_approval: {
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'awaiting_for_approval'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$customer_id', new ObjectId(userId)],
+                  },
+                ],
+              },
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
+          },
+        },
+
+        customer_order_cancel: {
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ['$order.order_status', 'cancel'],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ['$customer_id', new ObjectId(userId)],
+                  },
+                ],
+              },
+              then: 1,
+              // Count this document if any condition is true
+              else: 0, // Otherwise, do not count
+            },
+          },
+        },
+
         driver_total_earning: {
           $first: '$driver_total_earning',
         },
+        customer_total_payment_paid: {
+          $first: '$customer_total_payment_paid',
+        },
+        customer_total_payment_unpaid: {
+          $first: '$customer_total_payment_unpaid',
+        },
+        /////////////////////////////
       },
     },
+    {
+      $project:
+        /**
+         * specifications: The fields to
+         *   include or exclude.
+         */
+        {
+          total: 1,
+          driver_assigned_tender: 1,
+          driver_active_tender: 1,
+          driver_order_awaiting_for_payment: 1,
+          driver_order_payment_done: 1,
+          driver_order_processing: 1,
+          driver_order_on_the_way: 1,
+          driver_order_completed: 1,
+          driver_awaiting_for_approval: 1,
+          driver_order_cancel: 1,
+          cutsomer_published_tender: 1,
+          customer_active_tender: 1,
+          customer_order_awaiting_for_payment: 1,
+          customer_order_payment_done: 1,
+          customer_order_processing: 1,
+          customer_order_on_the_way: 1,
+          customer_order_completed: 1,
+          customer_awaiting_for_approval: 1,
+          customer_order_cancel: 1,
+          driver_total_earning: 1,
+          customer_total_payment_paid: 1,
+          customer_total_payment_unpaid: 1,
+        },
+    },
   ]
-
-  console.log(role)
-  const userDetail = await TenderModel.aggregate(
-    role == 'customer' ? aggregateCondition1 : role == 'driver' ? aggregateCondition2 : null
-  )
-
-  // const dataCustomer = await TenderModel.aggregate([
-  //   {
-  //     $match:
-  //       /**
-  //        * query: The query in MQL.
-  //        */
-  //       {
-  //         $and: [
-  //           {
-  //             customer_id: new ObjectId(userId),
-  //             'order.order_status': 'completed',
-  //           },
-  //         ],
-  //       },
-  //   },
-  //   { $group: { _id: null, totalPrice: { $sum: '$total_price' } } },
-  // ]).exec()
-
-  // if (role == 'customer') {
-  //   const priceSet = dataCustomer[0] || { totalPrice: 0 }
-  //   userDetail?.length > 0 ? (userDetail[0].order_completed_price = priceSet?.totalPrice) : null
-  // }
-  const unread_notifications_count = await notification.count({
-    receiver_id: new ObjectId(userId),
-    read: false,
-  })
+  const userDetail = await TenderModel.aggregate(aggregateCondition)
 
   const user = await UserModel.findOne({ _id: userId })
+
+  user.password = undefined
+  user.ip_address = undefined
+  user.access_token = undefined
+  user.refresh_token = undefined
+  user.push_token = undefined
+
   return apiResponse.successResponseWithData(
     res,
     'Brukerdetaljene ble hentet',
     'User detail fetched successfully',
     {
-      customer_stats: userDetail?.length > 0 ? userDetail[0] : null,
-      driver_stats: userDetail?.length > 0 ? userDetail[0] : null,
-      unread_notifications_count: unread_notifications_count,
+      stats: userDetail?.length > 0 ? userDetail[0] : null,
       user: user,
     }
   )

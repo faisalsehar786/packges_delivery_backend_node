@@ -69,6 +69,8 @@ router.get(
 
 router.get('/get_admin_stats', checkAdminUserAuth, adminController.getAdminStats)
 
-router.get('/get_app_users_stats', adminController.getAppUsersStats)
+router.get('/get_app_users_stats', checkAdminUserAuth, adminController.getAppUsersStats)
+
+router.get('/detail_profile', checkAdminUserAuth, adminController.getDetailProfileStatsData)
 
 module.exports = router

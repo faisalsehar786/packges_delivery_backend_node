@@ -337,11 +337,16 @@ const getNearestTender = async (req, res, next) => {
     const kilometters = req.query.kilometters ? Number(req.query.kilometters) : 1
     const unitValue = req.query.unitValue ? Number(req.query.unitValue) : 1000
     const order_status = req?.query?.order_status ? req?.query?.order_status : 'all'
+    const removeOwn = req?.query?.remove_own ? 'yes' : 'no'
+
     const filter = getFilterOptions(req)
     const maxDistance = kilometters * unitValue
 
     let andCod = []
     let orCod = []
+    if (removeOwn == 'yes') {
+      orCod.push({ customer_id: { $ne: req.user.id } })
+    }
 
     if (term) {
       orCod.push({ title: { $regex: term, $options: 'i' } })
