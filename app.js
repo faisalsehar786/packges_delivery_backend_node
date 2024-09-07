@@ -91,6 +91,8 @@ app.use((err, req, res, next) => {
   )
 })
 
+
+// its socket io code 
 const server = http.createServer(app)
 const io = socketIo(server)
 let onlineUsers = []
