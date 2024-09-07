@@ -92,7 +92,7 @@ app.use((err, req, res, next) => {
 })
 
 
-// its socket io code 
+// its socket io code its dynamci
 const server = http.createServer(app)
 const io = socketIo(server)
 let onlineUsers = []
