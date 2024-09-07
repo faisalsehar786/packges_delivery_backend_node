@@ -242,6 +242,7 @@ const getTendersAdmin = async (req, res, next) => {
     const status = req?.query?.status ? req?.query?.status : 'all'
     const order_status = req?.query?.order_status ? req?.query?.order_status : 'all'
     const withOrCond = req?.query?.withOrCond ? req?.query?.withOrCond : 'no'
+    const is_for_driver = req?.query?.is_for_driver ? true : false
     const filter = getFilterOptions(req)
 
     let andCod = []
@@ -252,6 +253,15 @@ const getTendersAdmin = async (req, res, next) => {
         { title: { $regex: term, $options: 'i' } },
         { 'order.order_no': { $regex: term, $options: 'i' } }
       )
+    }
+
+    if (is_for_driver) {
+      andCod.push({
+        driver_id: {
+          $exists: true,
+          $ne: null,
+        },
+      })
     }
     if (status != 'all' && status) {
       andCod.push({ tender_status: status })

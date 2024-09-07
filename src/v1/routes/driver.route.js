@@ -1,9 +1,9 @@
 const express = require('express')
 const driverController = require('../controllers/driver.controller')
 const router = express.Router()
-const {checkUserAuth} = require('../../../middlewares/authMiddleware')
+const { checkUserAuth } = require('../../../middlewares/authMiddleware')
 const mediaUpload = require('../../../middlewares/upload-aws-image')
-const {body} = require('express-validator')
+const { body } = require('express-validator')
 
 router.get('/drivers_requests_for_tender', checkUserAuth, driverController.driversRequestForTender)
 router.get('/get_nearest_tender', checkUserAuth, driverController.getNearestTender)
@@ -27,5 +27,4 @@ router.post(
   driverController.createDriverReuest
 )
 
-router.get('/get_driver_tenders', checkUserAuth, driverController.getdriverTenders)
 module.exports = router
