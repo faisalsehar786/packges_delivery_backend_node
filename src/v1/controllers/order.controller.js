@@ -242,7 +242,7 @@ const completeOrderByNo = async (req, res, next) => {
         },
         req,
         res,
-      })
+      })   
 
       if (updateRecord) {
         await createItemNotificationWithPush({
@@ -298,6 +298,21 @@ const completeOrderByNo = async (req, res, next) => {
         res,
       })
 
+      if(req?.body?.payment_id){
+         await updateItemReturnData({
+          Model: PaymentModal,
+          cond: {
+            _id: req?.body?.payment_id,
+          },
+          updateobject: {
+            approved: 'done',
+            
+          },
+          req,
+          res,
+        })
+      }
+
       if (updateRecord) {
         await createItemNotificationWithPush({
           itemDetails: {
@@ -325,12 +340,7 @@ const completeOrderByNo = async (req, res, next) => {
           { new: true }
         )
 
-        await PaymentModal.updateMany(
-          { customer_id: updateRecord?.customer_id },
-          { tender_id: updateRecord?._id },
-          { $set: { approved: 'done' } }
-        )
-
+     
         return apiResponse.successResponseWithData(
           res,
           'oppdatert',
